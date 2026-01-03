@@ -11,7 +11,9 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
+// 1. Google Sheet ID
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
+// 2. Google Drive Folder ID
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
@@ -29,7 +31,7 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
 
-// Database Schema (Updated with Room & Photo)
+// Database Schema
 const StudentSchema = new mongoose.Schema({
     // Reg Data
     fullName: String, 
@@ -49,9 +51,10 @@ const StudentSchema = new mongoose.Schema({
     city: String, 
     state: String, 
     pincode: String,
-    // New Fields
-    hostelRoom: String,     // Stores "Block A - 101"
-    profilePhotoUrl: String // Stores link to uploaded photo
+    // Hostel & Extras
+    hostelRoom: String,     // e.g. "Block A - 101"
+    messFeeStatus: String,  // e.g. "Paid" or "Pending"
+    profilePhotoUrl: String 
 });
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -79,7 +82,8 @@ app.post('/api/register', async (req, res) => {
             ...req.body, 
             regFeeStatus: "Pending", 
             appFeeStatus: "Pending",
-            hostelRoom: "Not Booked"
+            hostelRoom: "Not Booked",
+            messFeeStatus: "Pending"
         });
         await newStudent.save();
 
@@ -120,7 +124,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// --- ROUTE 3: UPDATE APPLICATION (Generic Update) ---
+// --- ROUTE 3: UPDATE APPLICATION ---
 app.post('/api/update-application', async (req, res) => {
     try {
         const { applicationId, ...updates } = req.body;
@@ -182,12 +186,16 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const response = await drive.files.create({
             resource: { name: `${safeName}_${safeDoc}_${Date.now()}.jpg`, parents: [DRIVE_FOLDER_ID] },
             media: { mimeType: req.file.mimetype, body: bufferStream },
-            fields: 'id, webViewLink, webContentLink'
+            fields: 'id, webViewLink'
         });
 
-        // We return webViewLink. 
-        // Note: For ID cards to render from Drive, the file must be public or proxied. 
-        // For this ERP, we'll store the link and use client-side file reading for immediate preview.
+        if(req.body.docType === 'Passport Photo') {
+             await Student.findOneAndUpdate(
+                { fullName: req.body.studentName },
+                { $set: { profilePhotoUrl: response.data.webViewLink } }
+            );
+        }
+
         res.status(200).json({ fileId: response.data.id, link: response.data.webViewLink });
     } catch (error) {
         console.error("Upload Error:", error);
