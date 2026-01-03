@@ -11,19 +11,19 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
-// REPLACE with your Sheet ID
+// 1. Google Sheet ID
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
-// REPLACE with your Drive Folder ID (Must be shared with Service Account Email)
+// 2. Google Drive Folder ID (Shared with Service Account)
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
 app.use(cors());
 app.use(express.json());
 
-// 1. SET UPLOAD LIMIT TO 10 MB
+// 1. UPLOAD LIMIT: 10 MB
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10 MB Limit
+    limits: { fileSize: 10 * 1024 * 1024 } 
 });
 
 // Connect to MongoDB
@@ -33,7 +33,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Database Schema
 const StudentSchema = new mongoose.Schema({
-    // Registration Details
+    // Registration Data
     fullName: String, 
     aadhaar: String, 
     dob: String, 
@@ -42,10 +42,10 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    // Payment Statuses
-    regFeeStatus: String, // Tracks ₹12,500 Admission Fee
-    appFeeStatus: String, // Tracks ₹1,200 Application Fee
-    // Application Details (Filled after Login)
+    // Fee Status
+    regFeeStatus: String, // ₹12,500 Admission Fee
+    appFeeStatus: String, // ₹1,200 Application Fee
+    // Application Data
     email: String, 
     address: String, 
     city: String, 
@@ -71,18 +71,17 @@ app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 // --- ROUTE 1: REGISTER (Step 1) ---
 app.post('/api/register', async (req, res) => {
     try {
-        // Check duplicate mobile
         const existing = await Student.findOne({ mobile: req.body.mobile });
-        if (existing) return res.status(400).json({ error: "Mobile already registered." });
+        if (existing) return res.status(400).json({ error: "Mobile number already registered." });
 
         const newStudent = new Student({ 
             ...req.body, 
-            regFeeStatus: "Pending", // Admission Fee not paid yet
+            regFeeStatus: "Pending", // Fee not paid yet
             appFeeStatus: "Pending" 
         });
         await newStudent.save();
 
-        // Append to Google Sheet (Columns A-O)
+        // Append to Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -100,19 +99,19 @@ app.post('/api/register', async (req, res) => {
                     new Date().toLocaleDateString(),
                     "Pending", // I: Reg Fee
                     "Pending", // J: App Fee
-                    "", "", "", "", "" // K-O: Address Fields Empty
+                    "", "", "", "", "" // K-O: Address Empty
                 ]]
             }
         });
 
         res.status(201).json({ message: "Registered", id: newStudent.applicationId });
     } catch (error) {
-        console.error("Registration Error:", error);
+        console.error("Reg Error:", error);
         res.status(500).json({ error: "Registration Failed" });
     }
 });
 
-// --- ROUTE 2: LOGIN (Strict Check) ---
+// --- ROUTE 2: LOGIN (Checks Fee) ---
 app.post('/api/login', async (req, res) => {
     try {
         const { mobile, dob } = req.body;
@@ -120,14 +119,14 @@ app.post('/api/login', async (req, res) => {
 
         if (!student) return res.status(401).json({ error: "Invalid Credentials" });
 
-        // STRICT CHECK: Cannot login if ₹12,500 is not paid
+        // STRICT CHECK: Must pay ₹12,500 to login
         if (student.regFeeStatus !== "Paid") {
-            return res.status(403).json({ error: "Admission Fee (₹12,500) Pending. Please Register & Pay first." });
+            return res.status(403).json({ error: "Admission Fee (₹12,500) Pending. Please Register & Pay." });
         }
 
         res.status(200).json({ message: "Success", student: student });
     } catch (error) {
-        res.status(500).json({ error: "Login Server Error" });
+        res.status(500).json({ error: "Login Error" });
     }
 });
 
@@ -144,15 +143,9 @@ app.post('/api/update-application', async (req, res) => {
 
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
-        // Update Google Sheet
+        // Update Sheet
         const sheets = google.sheets({ version: 'v4', auth });
-        
-        // Find Row Number using App ID (Column G)
-        const idList = await sheets.spreadsheets.values.get({
-            spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!G:G', 
-        });
-
+        const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
         const rows = idList.data.values;
         let rowIndex = -1;
 
@@ -163,17 +156,15 @@ app.post('/api/update-application', async (req, res) => {
         if (rowIndex !== -1) {
             const sheetRow = rowIndex + 1;
             
-            // If updating Reg Fee (Column I)
+            // Update Reg Fee (Column I)
             if (updates.regFeeStatus) {
                 await sheets.spreadsheets.values.update({
-                    spreadsheetId: SPREADSHEET_ID,
-                    range: `Sheet1!I${sheetRow}`,
-                    valueInputOption: 'USER_ENTERED',
-                    resource: { values: [[updates.regFeeStatus]] }
+                    spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
+                    valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
                 });
             }
 
-            // If updating App Data (Columns J-O)
+            // Update App Data (Columns J-O)
             if (updates.email || updates.appFeeStatus) {
                 const rowValues = [
                     updatedStudent.appFeeStatus,
@@ -184,18 +175,13 @@ app.post('/api/update-application', async (req, res) => {
                     updatedStudent.pincode
                 ];
                 await sheets.spreadsheets.values.update({
-                    spreadsheetId: SPREADSHEET_ID,
-                    range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
-                    valueInputOption: 'USER_ENTERED',
-                    resource: { values: [rowValues] }
+                    spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
+                    valueInputOption: 'USER_ENTERED', resource: { values: [rowValues] }
                 });
             }
         }
-
         res.status(200).json({ message: "Updated", student: updatedStudent });
-
     } catch (error) {
-        console.error("Update Error:", error);
         res.status(500).json({ error: "Update Failed" });
     }
 });
@@ -203,7 +189,7 @@ app.post('/api/update-application', async (req, res) => {
 // --- ROUTE 4: UPLOAD (To Shared Drive) ---
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).send("No file uploaded.");
+        if (!req.file) return res.status(400).send("No file.");
         
         const safeName = req.body.studentName ? req.body.studentName.replace(/[^a-zA-Z0-9]/g, '_') : "Student";
         const safeDoc = req.body.docType ? req.body.docType.replace(/[^a-zA-Z0-9]/g, '_') : "Doc";
@@ -212,28 +198,15 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const bufferStream = new stream.PassThrough();
         bufferStream.end(req.file.buffer);
 
-        const fileName = `${safeName}_${safeDoc}_${Date.now()}.jpg`;
-
-        const fileMetadata = {
-            name: fileName,
-            parents: [DRIVE_FOLDER_ID] // Uses the Shared Folder ID
-        };
-
-        const media = {
-            mimeType: req.file.mimetype,
-            body: bufferStream
-        };
-
         const response = await drive.files.create({
-            resource: fileMetadata,
-            media: media,
+            resource: { name: `${safeName}_${safeDoc}_${Date.now()}.jpg`, parents: [DRIVE_FOLDER_ID] },
+            media: { mimeType: req.file.mimetype, body: bufferStream },
             fields: 'id, webViewLink'
         });
 
         res.status(200).json({ fileId: response.data.id, link: response.data.webViewLink });
-
     } catch (error) {
-        console.error("Drive Upload Error:", error);
+        console.error("Upload Error:", error);
         res.status(500).send("Upload Failed: " + error.message);
     }
 });

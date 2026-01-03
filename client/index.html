@@ -26,7 +26,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-link { cursor: pointer; padding: 10px; display: block; color: #aaa; }
+        .nav-link { cursor: pointer; padding: 10px; display: block; color: #aaa; transition: all 0.3s; }
         .nav-link.active { color: white; background: rgba(255,255,255,0.1); border-right: 4px solid #EE3F36; }
         .preview-container { width: 100%; height: 100px; background-color: #f3f4f6; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
         .preview-img { width: 100%; height: 100%; object-fit: cover; display: none; }
@@ -40,9 +40,9 @@
                 <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" onerror="this.innerHTML='PPSU'" class="h-14 object-contain">
             </div>
             <div class="hidden md:flex items-center gap-6">
-                <button onclick="showHome()" class="text-sm font-medium hover:text-ppsuRed">Home</button>
-                <button onclick="showLoginScreen()" class="text-sm font-medium hover:text-ppsuRed">Student Login</button>
-                <button onclick="showRegistration()" class="bg-ppsuRed text-white px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:bg-red-700">Admissions 2026-27</button>
+                <button onclick="showHome()" class="text-sm font-medium hover:text-ppsuRed transition">Home</button>
+                <button onclick="showLoginScreen()" class="text-sm font-medium hover:text-ppsuRed transition">Student Login</button>
+                <button onclick="showRegistration()" class="bg-ppsuRed text-white px-6 py-2 rounded-full text-sm font-bold shadow-sm hover:bg-red-700 transition">Admissions 2026-27</button>
             </div>
         </div>
     </header>
@@ -50,13 +50,44 @@
     <main id="mainContainer" class="flex-grow flex items-center justify-center py-8 px-4">
         <div class="max-w-6xl w-full space-y-8">
             
-            <div id="homeFlow" class="fade-in">
-                <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 p-8 text-center">
-                    <h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to <span class="text-ppsuRed">P P Savani University</span></h1>
-                    <p class="text-gray-600 mb-8">Admissions Open for 2026-27</p>
-                    <div class="flex justify-center gap-4">
-                        <button onclick="showRegistration()" class="bg-ppsuRed text-white px-8 py-3 rounded-lg text-lg font-bold shadow-lg">Apply Now</button>
-                        <button onclick="showLoginScreen()" class="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-lg text-lg font-medium">Student Login</button>
+            <div id="homeFlow" class="fade-in relative min-h-[80vh] flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl">
+                <div class="absolute inset-0 bg-cover bg-center transform scale-105 transition-transform duration-[20s] hover:scale-100" 
+                     style="background-image: url('https://timess3spore.s3.amazonaws.com/ndata/media/College/college_desktop_webp/1680463347.webp');">
+                </div>
+                <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
+                
+                <div class="relative z-10 text-center text-white p-8 max-w-4xl">
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight drop-shadow-xl">
+                        Welcome to <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-400">P P Savani University</span>
+                    </h1>
+                    <p class="text-lg md:text-2xl mb-10 text-gray-200 font-light leading-relaxed drop-shadow-md">
+                        Empowering Minds, Shaping Futures. <br> <span class="font-bold">Admissions Open for 2026-27</span>
+                    </p>
+                    <div class="flex flex-col md:flex-row justify-center gap-6">
+                        <button onclick="showRegistration()" class="px-10 py-4 bg-ppsuRed text-white text-lg font-bold rounded-full shadow-lg hover:bg-red-600 hover:-translate-y-1 transition transform flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-pen-nib"></i> Apply Now
+                        </button>
+                        <button onclick="showLoginScreen()" class="px-10 py-4 bg-white/10 backdrop-blur-md border border-white/30 text-white text-lg font-bold rounded-full shadow-lg hover:bg-white hover:text-black hover:-translate-y-1 transition transform flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user"></i> Student Login
+                        </button>
+                    </div>
+                    
+                    <div class="mt-16 grid grid-cols-3 gap-8 border-t border-white/20 pt-8">
+                        <div class="hover:-translate-y-1 transition duration-300">
+                            <i class="fa-solid fa-trophy text-3xl text-yellow-400 mb-2"></i>
+                            <p class="font-bold text-xl">Ranked #1</p>
+                            <p class="text-xs text-gray-400">Private University</p>
+                        </div>
+                        <div class="hover:-translate-y-1 transition duration-300">
+                            <i class="fa-solid fa-graduation-cap text-3xl text-blue-400 mb-2"></i>
+                            <p class="font-bold text-xl">100%</p>
+                            <p class="text-xs text-gray-400">Placement Support</p>
+                        </div>
+                        <div class="hover:-translate-y-1 transition duration-300">
+                            <i class="fa-solid fa-flask text-3xl text-green-400 mb-2"></i>
+                            <p class="font-bold text-xl">Hi-Tech</p>
+                            <p class="text-xs text-gray-400">Laboratories</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -90,14 +121,14 @@
                                 </select>
                                 <input type="tel" id="mobile" required placeholder="Mobile Number" maxlength="10" class="block w-full px-3 py-2.5 border rounded-lg">
                                 <input type="text" id="referral" required placeholder="Referral Name" class="block w-full px-3 py-2.5 border rounded-lg">
-                                <button type="submit" class="w-full py-3 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700">Proceed to Payment</button>
+                                <button type="submit" class="w-full py-3 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 transition">Proceed to Payment</button>
                             </div>
                         </form>
                     </div>
                     
                     <div id="step2-content" class="hidden p-8 text-center">
                         <h3 class="text-xl font-bold mb-4">Confirm Registration</h3>
-                        <div class="bg-slate-50 p-4 rounded mb-6 text-left">
+                        <div class="bg-slate-50 p-4 rounded mb-6 text-left border">
                             <p>Name: <span id="summaryName" class="font-bold"></span></p>
                             <p>Course: <span id="summaryCourse" class="font-bold"></span></p>
                             <div class="flex justify-between items-center mt-4 border-t pt-4">
@@ -105,7 +136,7 @@
                                 <span class="text-2xl font-bold text-ppsuRed">₹12,500</span>
                             </div>
                         </div>
-                        <button onclick="processAdmissionPayment()" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg">Pay Securely Now</button>
+                        <button onclick="processAdmissionPayment()" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">Pay Securely Now</button>
                         <div id="paymentLoader" class="hidden mt-4"><div class="loader mx-auto"></div><p class="text-xs text-gray-500 mt-2">Processing Payment...</p></div>
                     </div>
                     
@@ -117,7 +148,7 @@
                              <p class="text-sm">Password: <span id="credPassword" class="font-bold"></span></p>
                              <p class="text-xs text-gray-500 mt-2">App ID: <span id="credAppId"></span></p>
                         </div>
-                        <button onclick="showLoginScreen()" class="w-full py-3 bg-ppsuRed text-white rounded-lg font-bold">Login to Dashboard</button>
+                        <button onclick="showLoginScreen()" class="w-full py-3 bg-ppsuRed text-white rounded-lg font-bold hover:bg-red-700 transition">Login to Dashboard</button>
                     </div>
                 </div>
             </div>
@@ -130,7 +161,7 @@
                             <div class="space-y-4">
                                 <input type="tel" id="loginMobile" required placeholder="Mobile Number" class="block w-full px-3 py-2 border rounded-lg">
                                 <input type="password" id="loginPass" required placeholder="Password (DOB: YYYY-MM-DD)" class="block w-full px-3 py-2 border rounded-lg">
-                                <button type="submit" id="loginBtn" class="w-full py-3 bg-ppsuDark text-white rounded-lg font-bold">Login</button>
+                                <button type="submit" id="loginBtn" class="w-full py-3 bg-ppsuDark text-white rounded-lg font-bold hover:bg-black transition">Login</button>
                             </div>
                         </form>
                     </div>
@@ -141,21 +172,21 @@
 
     <div id="dashboardFlow" class="hidden fixed inset-0 z-[60] bg-slate-50 flex overflow-hidden">
         <aside class="w-64 bg-ppsuDark text-white flex flex-col hidden md:flex h-full shadow-2xl">
-            <div class="h-20 flex items-center gap-2 px-6 bg-black/30 border-b border-white/10"><i class="fa-solid fa-graduation-cap"></i><span class="font-bold">PPSU Portal</span></div>
+            <div class="h-20 flex items-center gap-2 px-6 bg-black/30 border-b border-white/10"><i class="fa-solid fa-graduation-cap text-ppsuRed text-xl"></i><span class="font-bold">PPSU Portal</span></div>
             <div class="p-6 border-b border-white/10">
                 <p id="sidebarName" class="font-bold truncate">Student</p>
                 <p id="sidebarAppId" class="text-xs text-gray-400">APP0000</p>
             </div>
             <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
-                <a onclick="switchDashTab('home')" id="nav-home" class="nav-link active">Overview</a>
-                <a onclick="switchDashTab('app')" id="nav-app" class="nav-link">My Application</a>
-                <a onclick="switchDashTab('hostel')" id="nav-hostel" class="nav-link">Hostel Booking</a>
-                <a onclick="switchDashTab('certs')" id="nav-certs" class="nav-link">Documents</a>
-                <a onclick="switchDashTab('idcard')" id="nav-idcard" class="nav-link">Digital ID Card</a>
-                <a onclick="switchDashTab('fees')" id="nav-fees" class="nav-link">Fee Structure</a>
-                <a onclick="switchDashTab('receipts')" id="nav-receipts" class="nav-link">Receipts</a>
+                <a onclick="switchDashTab('home')" id="nav-home" class="nav-link active"><i class="fa-solid fa-home w-6"></i> Overview</a>
+                <a onclick="switchDashTab('app')" id="nav-app" class="nav-link"><i class="fa-solid fa-file-contract w-6"></i> My Application</a>
+                <a onclick="switchDashTab('hostel')" id="nav-hostel" class="nav-link"><i class="fa-solid fa-bed w-6"></i> Hostel Booking</a>
+                <a onclick="switchDashTab('certs')" id="nav-certs" class="nav-link"><i class="fa-solid fa-file-arrow-up w-6"></i> Documents</a>
+                <a onclick="switchDashTab('idcard')" id="nav-idcard" class="nav-link"><i class="fa-solid fa-id-card w-6"></i> Digital ID Card</a>
+                <a onclick="switchDashTab('fees')" id="nav-fees" class="nav-link"><i class="fa-solid fa-receipt w-6"></i> Fee Structure</a>
+                <a onclick="switchDashTab('receipts')" id="nav-receipts" class="nav-link"><i class="fa-solid fa-clock-rotate-left w-6"></i> Receipts</a>
             </nav>
-            <div class="p-4"><button onclick="logout()" class="w-full py-2 bg-red-600 rounded">Logout</button></div>
+            <div class="p-4"><button onclick="logout()" class="w-full py-2 bg-red-600 rounded hover:bg-red-700 transition">Logout</button></div>
         </aside>
 
         <div class="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -185,35 +216,64 @@
                             <input type="text" id="appState" required placeholder="State" class="border p-2 rounded">
                             <input type="text" id="appPincode" required placeholder="Pincode" class="border p-2 rounded">
                         </div>
-                        <button type="submit" id="submitAppBtn" class="bg-ppsuDark text-white px-6 py-2 rounded">Save & Pay App Fee (₹1,200)</button>
+                        <button type="submit" id="submitAppBtn" class="bg-ppsuDark text-white px-6 py-2 rounded hover:bg-black transition">Save & Pay App Fee (₹1,200)</button>
                     </form>
                 </div>
 
                 <div id="dash-certs" class="max-w-6xl mx-auto hidden fade-in">
                     <h3 class="font-bold mb-2">Documents</h3>
-                    <p class="text-sm text-red-500 mb-6">Note: Max file size 10 MB.</p>
+                    <p class="text-sm text-red-500 mb-6"><i class="fa-solid fa-triangle-exclamation"></i> Note: Max file size 10 MB.</p>
                     <div class="grid grid-cols-3 gap-6">
-                        <div class="bg-white p-4 rounded border text-center"><h4>10th Marksheet</h4><input type="file" id="file10th" class="text-xs my-2"><button onclick="uploadCert('10th Marksheet', 'btn10th')" id="btn10th" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
-                        <div class="bg-white p-4 rounded border text-center"><h4>12th Marksheet</h4><input type="file" id="file12th" class="text-xs my-2"><button onclick="uploadCert('12th Marksheet', 'btn12th')" id="btn12th" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
-                        <div class="bg-white p-4 rounded border text-center"><h4>TC</h4><input type="file" id="fileTC" class="text-xs my-2"><button onclick="uploadCert('TC', 'btnTC')" id="btnTC" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
-                        <div class="bg-white p-4 rounded border text-center"><h4>Student Aadhaar</h4><input type="file" id="fileAadhaar" class="text-xs my-2"><button onclick="uploadCert('Student Aadhaar', 'btnAadhaar')" id="btnAadhaar" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
-                        <div class="bg-white p-4 rounded border text-center"><h4>Father Aadhaar</h4><input type="file" id="fileFather" class="text-xs my-2"><button onclick="uploadCert('Father Aadhaar', 'btnFather')" id="btnFather" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
-                        <div class="bg-white p-4 rounded border text-center"><h4>Mother Aadhaar</h4><input type="file" id="fileMother" class="text-xs my-2"><button onclick="uploadCert('Mother Aadhaar', 'btnMother')" id="btnMother" class="bg-black text-white px-4 py-1 rounded text-sm">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>10th Marksheet</h4><input type="file" id="file10th" class="text-xs my-2 block w-full"><button onclick="uploadCert('10th Marksheet', 'btn10th')" id="btn10th" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>12th Marksheet</h4><input type="file" id="file12th" class="text-xs my-2 block w-full"><button onclick="uploadCert('12th Marksheet', 'btn12th')" id="btn12th" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>TC</h4><input type="file" id="fileTC" class="text-xs my-2 block w-full"><button onclick="uploadCert('TC', 'btnTC')" id="btnTC" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>Student Aadhaar</h4><input type="file" id="fileAadhaar" class="text-xs my-2 block w-full"><button onclick="uploadCert('Student Aadhaar', 'btnAadhaar')" id="btnAadhaar" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>Father Aadhaar</h4><input type="file" id="fileFather" class="text-xs my-2 block w-full"><button onclick="uploadCert('Father Aadhaar', 'btnFather')" id="btnFather" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
+                        <div class="bg-white p-4 rounded border text-center hover:shadow-md transition"><h4>Mother Aadhaar</h4><input type="file" id="fileMother" class="text-xs my-2 block w-full"><button onclick="uploadCert('Mother Aadhaar', 'btnMother')" id="btnMother" class="bg-black text-white px-4 py-1 rounded text-sm w-full">Upload</button></div>
                     </div>
                 </div>
 
                 <div id="dash-hostel" class="hidden">
                     <h3 class="font-bold mb-4">Select Hostel</h3>
                     <div class="grid grid-cols-3 gap-4">
-                        <div onclick="selectHostel('Non-AC', 75000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg"><h4>Non-AC</h4><p>₹75,000</p></div>
-                        <div onclick="selectHostel('AC 3', 110000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg"><h4>AC 3 Sharing</h4><p>₹1,10,000</p></div>
-                        <div onclick="selectHostel('AC 2', 140000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg"><h4>AC 2 Sharing</h4><p>₹1,40,000</p></div>
+                        <div onclick="selectHostel('Non-AC', 75000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg transition">
+                            <h4 class="font-bold">Non-AC (4 Sharing)</h4><p class="text-ppsuRed font-bold text-xl mt-2">₹75,000</p>
+                        </div>
+                        <div onclick="selectHostel('AC 3', 110000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg transition">
+                            <h4 class="font-bold">AC (3 Sharing)</h4><p class="text-ppsuRed font-bold text-xl mt-2">₹1,10,000</p>
+                        </div>
+                        <div onclick="selectHostel('AC 2', 140000)" class="bg-white p-6 border rounded cursor-pointer hover:shadow-lg transition">
+                            <h4 class="font-bold">AC (2 Sharing)</h4><p class="text-ppsuRed font-bold text-xl mt-2">₹1,40,000</p>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="dash-idcard" class="hidden flex justify-center"><div class="w-80 bg-white border rounded shadow p-4 text-center"><h2 class="font-bold">Student ID</h2><p id="idCardName">Student</p><p id="idCardNo">ID: --</p></div></div>
+                <div id="dash-idcard" class="hidden flex justify-center">
+                    <div class="w-80 h-[450px] bg-white border rounded-xl shadow-lg flex flex-col overflow-hidden">
+                        <div class="bg-ppsuDark h-20 flex flex-col items-center justify-center text-white relative">
+                            <span class="font-bold tracking-widest text-xs relative z-10">P P SAVANI UNIVERSITY</span>
+                            <div class="absolute inset-0 bg-red-600/20"></div>
+                        </div>
+                        <div class="bg-ppsuRed text-white text-center text-xs py-1 font-bold" id="idCardCourseDisplay">--</div>
+                        <div class="p-6 flex-grow text-center">
+                            <div class="w-24 h-24 bg-gray-200 rounded mx-auto mb-4 border flex items-center justify-center"><i class="fa-solid fa-user text-4xl text-gray-400"></i></div>
+                            <h2 class="font-bold text-xl uppercase" id="idCardName">Student</h2>
+                            <p class="text-sm text-gray-500" id="idCardNo">ID: --</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 text-center text-xs text-gray-400 border-t">Valid upto 2030</div>
+                    </div>
+                </div>
                 
-                <div id="dash-fees" class="hidden"><h3 class="font-bold">Fee Structure</h3><p>Total: ₹3,80,000</p></div>
+                <div id="dash-fees" class="hidden">
+                    <h3 class="font-bold">Fee Structure</h3>
+                    <table class="w-full text-left mt-4 border-collapse">
+                        <tr class="bg-slate-100"><th class="p-2 border">Semester</th><th class="p-2 border">Fee</th></tr>
+                        <tr><td class="p-2 border">Sem 1</td><td class="p-2 border">₹47,500</td></tr>
+                        <tr><td class="p-2 border">Sem 2</td><td class="p-2 border">₹47,500</td></tr>
+                        <tr class="font-bold"><td class="p-2 border">Total</td><td class="p-2 border">₹3,80,000</td></tr>
+                    </table>
+                </div>
+                
                 <div id="dash-receipts" class="hidden">
                     <h3 class="font-bold mb-4">Receipts</h3>
                     <div class="bg-white p-4 border rounded flex justify-between mb-2"><span>Admission Fee (₹12,500)</span><span class="text-green-600 font-bold">PAID</span></div>
@@ -223,11 +283,12 @@
         </div>
     </div>
 
-    <div id="appPayModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center">
-        <div class="bg-white rounded p-8 text-center">
+    <div id="appPayModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[70]">
+        <div class="bg-white rounded p-8 text-center shadow-2xl animate-bounce-in">
             <h3 class="text-xl font-bold">Application Fee</h3>
-            <p class="text-2xl text-ppsuRed my-4">₹1,200</p>
-            <button onclick="confirmAppPayment()" class="bg-green-600 text-white px-6 py-2 rounded">Pay Now</button>
+            <p class="text-sm text-gray-500">One-time processing charge</p>
+            <p class="text-3xl text-ppsuRed my-4 font-bold">₹1,200</p>
+            <button onclick="confirmAppPayment()" class="bg-green-600 text-white px-8 py-3 rounded font-bold hover:bg-green-700 transition">Pay Securely</button>
         </div>
     </div>
 
@@ -302,7 +363,7 @@
             getEl('sidebarAppId').innerText = user.applicationId;
             getEl('dashNameHome').innerText = user.fullName;
             getEl('idCardName').innerText = user.fullName;
-            getEl('idCardNo').innerText = user.applicationId;
+            getEl('idCardNo').innerText = "ID: " + user.applicationId;
             getEl('idCardCourseDisplay').innerText = user.course;
 
             getEl('appFullName').value = user.fullName;
