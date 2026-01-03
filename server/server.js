@@ -11,15 +11,15 @@ const fs = require('fs');
 
 const app = express();
 
-// --- CONFIGURATION ---
-const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
-
-// Cloudinary Config (Hardcoded as requested, or use Env Vars for extra security)
+// --- 1. CLOUDINARY CONFIG (Your Keys) ---
 cloudinary.config({ 
   cloud_name: 'dvks6hfcb', 
   api_key: '695563669199692', 
   api_secret: 'IbMOW49KnpLoVWCepnaiQ77UUws' 
 });
+
+// --- 2. GOOGLE SHEETS CONFIG ---
+const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +29,8 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } 
 });
 
+// --- 3. DATABASE CONNECTION ---
+// If this fails, Registration fails. Ensure MONGO_URI is in Render Environment Variables.
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
@@ -42,27 +44,25 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// --- SECURE AUTH SETUP ---
+// --- 4. SAFE GOOGLE AUTH ---
+// This allows the app to start even if Google Credentials are missing/broken
 let auth;
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-
-// 1. Production: Use Environment Variable (Render)
-if (process.env.GOOGLE_CREDENTIALS) {
-    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-    auth = new google.auth.GoogleAuth({
-        credentials,
-        scopes: SCOPES,
-    });
-} 
-// 2. Development: Use Local File
-else {
-    let KEY_PATH = path.join(__dirname, 'credentials.json');
-    if (fs.existsSync(KEY_PATH)) {
+try {
+    const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+    // Check Render Env Var first
+    if (process.env.GOOGLE_CREDENTIALS) {
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        auth = new google.auth.GoogleAuth({ credentials, scopes: SCOPES });
+    } 
+    // Check Local File
+    else if (fs.existsSync(path.join(__dirname, 'credentials.json'))) {
         auth = new google.auth.GoogleAuth({
-            keyFile: KEY_PATH,
+            keyFile: path.join(__dirname, 'credentials.json'),
             scopes: SCOPES,
         });
     }
+} catch (e) {
+    console.error("Google Auth disabled due to config error:", e.message);
 }
 
 app.get('/', (req, res) => res.send('PPSU ERP Backend Live!'));
@@ -79,25 +79,29 @@ app.post('/api/register', async (req, res) => {
         });
         await newStudent.save();
 
+        // Update Sheet (Skip if auth failed)
         if (auth) {
-            const sheets = google.sheets({ version: 'v4', auth });
-            await sheets.spreadsheets.values.append({
-                spreadsheetId: SPREADSHEET_ID,
-                range: 'Sheet1!A:O', 
-                valueInputOption: 'USER_ENTERED',
-                resource: {
-                    values: [[
-                        req.body.fullName, req.body.aadhaar, req.body.dob, req.body.course, 
-                        req.body.mobile, req.body.referral, req.body.applicationId, 
-                        new Date().toLocaleDateString(), "Pending", "Pending", "", "", "", "", ""
-                    ]]
-                }
-            });
+            try {
+                const sheets = google.sheets({ version: 'v4', auth });
+                await sheets.spreadsheets.values.append({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: 'Sheet1!A:O', 
+                    valueInputOption: 'USER_ENTERED',
+                    resource: {
+                        values: [[
+                            req.body.fullName, req.body.aadhaar, req.body.dob, req.body.course, 
+                            req.body.mobile, req.body.referral, req.body.applicationId, 
+                            new Date().toLocaleDateString(), "Pending", "Pending", "", "", "", "", ""
+                        ]]
+                    }
+                });
+            } catch (sheetErr) { console.error("Sheet Error (Ignored):", sheetErr.message); }
         }
+
         res.status(201).json({ message: "Registered", id: newStudent.applicationId });
     } catch (error) {
         console.error("Reg Error:", error);
-        res.status(500).json({ error: "Registration Failed" });
+        res.status(500).json({ error: "Registration Failed: " + error.message });
     }
 });
 
@@ -105,10 +109,10 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { mobile, dob } = req.body;
-        const student = await Student.findOne({ mobile: mobile, dob: dob });
+        const student = await Student.findOne({ mobile, dob });
         if (!student) return res.status(401).json({ error: "Invalid Credentials" });
         if (student.regFeeStatus !== "Paid") return res.status(403).json({ error: "Admission Fee Pending." });
-        res.status(200).json({ message: "Success", student: student });
+        res.status(200).json({ message: "Success", student });
     } catch (error) { res.status(500).json({ error: "Login Error" }); }
 });
 
@@ -116,41 +120,41 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/update-application', async (req, res) => {
     try {
         const { applicationId, ...updates } = req.body;
-        const updatedStudent = await Student.findOneAndUpdate({ applicationId: applicationId }, { $set: updates }, { new: true });
+        const updatedStudent = await Student.findOneAndUpdate({ applicationId }, { $set: updates }, { new: true });
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
+        // Best-effort Sheet Update
         if (auth) {
-            const sheets = google.sheets({ version: 'v4', auth });
-            const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
-            const rows = idList.data.values;
-            let rowIndex = -1;
-            if (rows && rows.length > 0) rowIndex = rows.findIndex(row => row[0] === applicationId);
+            try {
+                const sheets = google.sheets({ version: 'v4', auth });
+                const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
+                const rows = idList.data.values;
+                let rowIndex = -1;
+                if (rows && rows.length > 0) rowIndex = rows.findIndex(row => row[0] === applicationId);
 
-            if (rowIndex !== -1) {
-                const sheetRow = rowIndex + 1;
-                if (updates.regFeeStatus) {
-                    await sheets.spreadsheets.values.update({
-                        spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
-                        valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
-                    });
+                if (rowIndex !== -1) {
+                    const sheetRow = rowIndex + 1;
+                    if (updates.regFeeStatus) {
+                        await sheets.spreadsheets.values.update({
+                            spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
+                            valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
+                        });
+                    }
+                    if (updates.email || updates.appFeeStatus) {
+                        const rowValues = [ updatedStudent.appFeeStatus, updatedStudent.email, updatedStudent.address, updatedStudent.city, updatedStudent.state, updatedStudent.pincode ];
+                        await sheets.spreadsheets.values.update({
+                            spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
+                            valueInputOption: 'USER_ENTERED', resource: { values: [rowValues] }
+                        });
+                    }
                 }
-                if (updates.email || updates.appFeeStatus) {
-                    const rowValues = [
-                        updatedStudent.appFeeStatus, updatedStudent.email, updatedStudent.address, 
-                        updatedStudent.city, updatedStudent.state, updatedStudent.pincode
-                    ];
-                    await sheets.spreadsheets.values.update({
-                        spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
-                        valueInputOption: 'USER_ENTERED', resource: { values: [rowValues] }
-                    });
-                }
-            }
+            } catch (e) { console.error("Sheet Update Error:", e.message); }
         }
         res.status(200).json({ message: "Updated", student: updatedStudent });
     } catch (error) { res.status(500).json({ error: "Update Failed" }); }
 });
 
-// ROUTE 4: UPLOAD (Cloudinary)
+// ROUTE 4: UPLOAD (Using Your Cloudinary Keys)
 app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).send("No file.");
     
