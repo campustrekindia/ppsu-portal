@@ -11,17 +11,19 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
+// REPLACE THIS WITH YOUR GOOGLE SHEET ID
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
+// REPLACE THIS WITH YOUR FOLDER ID (From the URL of the folder you shared)
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
 app.use(cors());
 app.use(express.json());
 
-// 1. UPLOAD LIMIT 10 MB
+// 1. SET UPLOAD LIMIT TO 10 MB
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } 
+    limits: { fileSize: 10 * 1024 * 1024 } // 10 MB Limit
 });
 
 // Connect to MongoDB
@@ -31,7 +33,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Database Schema
 const StudentSchema = new mongoose.Schema({
-    // Reg Details
+    // Step 1: Registration Data
     fullName: String, 
     aadhaar: String, 
     dob: String, 
@@ -40,9 +42,10 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    regFeeStatus: String, // Tracks the ₹12,500 payment
-    appFeeStatus: String, // Tracks the ₹1,200 payment
-    // App Details
+    // Fee Statuses
+    regFeeStatus: String, // ₹12,500
+    appFeeStatus: String, // ₹1,200
+    // Step 2: Application Details
     email: String, 
     address: String, 
     city: String, 
@@ -65,17 +68,19 @@ const auth = new google.auth.GoogleAuth({
 
 app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 
-// --- ROUTE 1: REGISTER (Basic Info + Admission Fee Pending) ---
+// --- ROUTE 1: REGISTER (Basic Info + Reg Fee Pending) ---
 app.post('/api/register', async (req, res) => {
     try {
         const newStudent = new Student({ 
             ...req.body, 
-            regFeeStatus: "Pending",
-            appFeeStatus: "Pending" 
+            regFeeStatus: "Pending", // Admission Fee
+            appFeeStatus: "Pending"  // Application Fee
         });
         await newStudent.save();
 
         const sheets = google.sheets({ version: 'v4', auth });
+        
+        // Append to Sheet (Columns A-O)
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
             range: 'Sheet1!A:O', 
@@ -92,7 +97,7 @@ app.post('/api/register', async (req, res) => {
                     new Date().toLocaleDateString(),
                     "Pending", // I: Reg Fee Status
                     "Pending", // J: App Fee Status
-                    "", "", "", "", "" // K-O: Address Fields
+                    "", "", "", "", "" // K-O: Address Fields (Empty)
                 ]]
             }
         });
@@ -104,13 +109,20 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- ROUTE 2: UPDATE APPLICATION (Address Info + App Fee) ---
+// --- ROUTE 2: UPDATE APPLICATION (Address Info + App Fee Status) ---
 app.post('/api/update-application', async (req, res) => {
     try {
-        const { applicationId, email, address, city, state, pincode, appFeeStatus } = req.body;
+        const { applicationId, email, address, city, state, pincode, appFeeStatus, regFeeStatus } = req.body;
 
-        const updateFields = { email, address, city, state, pincode };
-        if(appFeeStatus) updateFields.appFeeStatus = appFeeStatus;
+        // Construct update object dynamically
+        const updateFields = {};
+        if (email) updateFields.email = email;
+        if (address) updateFields.address = address;
+        if (city) updateFields.city = city;
+        if (state) updateFields.state = state;
+        if (pincode) updateFields.pincode = pincode;
+        if (appFeeStatus) updateFields.appFeeStatus = appFeeStatus;
+        if (regFeeStatus) updateFields.regFeeStatus = regFeeStatus;
 
         const updatedStudent = await Student.findOneAndUpdate(
             { applicationId: applicationId },
@@ -138,18 +150,34 @@ app.post('/api/update-application', async (req, res) => {
 
         if (rowIndex !== -1) {
             const sheetRow = rowIndex + 1;
-            // Update Columns J (App Fee) and K-O (Address)
-            const rowValues = [
-                appFeeStatus || "Pending",
-                email, address, city, state, pincode
-            ];
+            
+            // If updating Reg Fee (Column I)
+            if (regFeeStatus) {
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `Sheet1!I${sheetRow}`,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values: [[regFeeStatus]] }
+                });
+            }
 
-            await sheets.spreadsheets.values.update({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
-                valueInputOption: 'USER_ENTERED',
-                resource: { values: [rowValues] }
-            });
+            // If updating Application Data (Columns J-O)
+            if (email || appFeeStatus) {
+                const rowValues = [
+                    updatedStudent.appFeeStatus,
+                    updatedStudent.email, 
+                    updatedStudent.address, 
+                    updatedStudent.city, 
+                    updatedStudent.state, 
+                    updatedStudent.pincode
+                ];
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values: [rowValues] }
+                });
+            }
         }
 
         res.status(200).json({ message: "Details Updated Successfully" });
@@ -160,12 +188,11 @@ app.post('/api/update-application', async (req, res) => {
     }
 });
 
-// --- ROUTE 3: UPLOAD (Robust Name Handling) ---
+// --- ROUTE 3: UPLOAD (To Shared Drive Folder) ---
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
         
-        // Fallback names
         const safeName = req.body.studentName ? req.body.studentName.replace(/[^a-zA-Z0-9]/g, '_') : "Student";
         const safeDoc = req.body.docType ? req.body.docType.replace(/[^a-zA-Z0-9]/g, '_') : "Doc";
 
@@ -175,8 +202,15 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
         const fileName = `${safeName}_${safeDoc}_${Date.now()}.jpg`;
 
-        const fileMetadata = { name: fileName, parents: [DRIVE_FOLDER_ID] };
-        const media = { mimeType: req.file.mimetype, body: bufferStream };
+        const fileMetadata = {
+            name: fileName,
+            parents: [DRIVE_FOLDER_ID] // CRITICAL: This puts it in YOUR shared folder
+        };
+
+        const media = {
+            mimeType: req.file.mimetype,
+            body: bufferStream
+        };
 
         const response = await drive.files.create({
             resource: fileMetadata,
