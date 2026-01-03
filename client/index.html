@@ -338,70 +338,89 @@
         let currentUser = null;
         let hostelBooking = { status: 'none', fee: 0 };
         let tempPhotoUrl = ""; 
-        const API = "https://ppsu-backend.onrender.com/api";
+        
+        // --- IMPORTANT: CHECK THIS URL ---
+        // This MUST match your Render Service URL exactly.
+        const API = "https://ppsu-backend.onrender.com/api"; 
 
         const getEl = (id) => document.getElementById(id);
-        const show = (id) => getEl(id).classList.remove('hidden');
-        const hide = (id) => getEl(id).classList.add('hidden');
+        const show = (id) => { if(getEl(id)) getEl(id).classList.remove('hidden'); }
+        const hide = (id) => { if(getEl(id)) getEl(id).classList.add('hidden'); }
 
-        function showHome() { hide('registrationFlow'); hide('loginFlow'); hide('dashboardFlow'); show('homeFlow'); getEl('publicHeader').classList.remove('hidden'); }
+        function showHome() { hide('registrationFlow'); hide('loginFlow'); hide('dashboardFlow'); show('homeFlow'); if(getEl('publicHeader')) getEl('publicHeader').classList.remove('hidden'); }
         function showRegistration() { hide('homeFlow'); hide('loginFlow'); show('registrationFlow'); }
         function showLoginScreen() { hide('homeFlow'); hide('registrationFlow'); show('loginFlow'); }
+
         function switchTab(t) { 
             ['home','app','hostel','certs','idcard','fees','receipts'].forEach(x => hide('view-'+x)); 
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-            show('view-'+t); getEl('nav-'+t).classList.add('active');
-            
-            // Auto-refresh photo on ID Card tab
-            if(t==='idcard' && (tempPhotoUrl || currentUser.profilePhotoUrl)) { 
-                getEl('idCardPhoto').src = tempPhotoUrl || currentUser.profilePhotoUrl; 
-                getEl('idCardPhoto').style.display='block'; 
-                getEl('idCardPlaceholder').style.display='none'; 
+            show('view-'+t); 
+            if(getEl('nav-'+t)) getEl('nav-'+t).classList.add('active');
+
+            // ID Card Logic
+            if(t==='idcard') { 
+                const photo = tempPhotoUrl || (currentUser ? currentUser.profilePhotoUrl : "");
+                if(photo) {
+                    getEl('idCardPhoto').src = photo; 
+                    getEl('idCardPhoto').style.display='block'; 
+                    getEl('idCardPlaceholder').style.display='none'; 
+                }
+            }
+            // Hostel Logic
+            if(t==='hostel') {
+                if(currentUser && currentUser.hostelRoom && currentUser.hostelRoom !== "Not Booked") {
+                    hide('hostelSelectionView'); show('hostelDashboardView');
+                } else {
+                    show('hostelSelectionView'); hide('hostelDashboardView');
+                }
             }
         }
 
-        // MOBILE OTP
-        function verifyMobile() {
-            if(getEl('mobile').value.length!==10) return alert("Invalid Mobile");
-            const btn = getEl('verifyBtn'); btn.innerText = "Sending...";
-            setTimeout(() => { 
-                let otp = prompt("Enter OTP sent to mobile (Demo: 1234)");
-                if(otp==="1234") { getEl('verifiedBadge').classList.remove('hidden'); btn.classList.add('hidden'); }
-                else { alert("Invalid OTP"); btn.innerText = "Send OTP"; }
-            }, 1000);
-        }
-
-        // 1. REGISTER
+        // --- 1. SMART REGISTRATION (DEBUGGING ENABLED) ---
         async function handleRegistration(e) {
             e.preventDefault();
-            if(getEl('verifiedBadge').classList.contains('hidden')) return alert("Verify Mobile First");
+            
+            // Disable button to prevent double clicks
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing..."; btn.disabled = true;
+
             const data = {
                 fullName: getEl('fullName').value, aadhaar: getEl('aadhaar').value, dob: getEl('dob').value,
                 course: getEl('course').value, mobile: getEl('mobile').value, referral: getEl('referral').value,
                 applicationId: '2026' + Math.floor(100000 + Math.random() * 900000)
             };
+
             try {
-                const res = await fetch(`${API}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                console.log("Sending Request to:", `${API}/register`); // Check Console
+                const res = await fetch(`${API}/register`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
+
+                const responseData = await res.json(); // Read the server response
+
                 if(res.ok) {
+                    // Success!
                     currentUser = data; 
                     getEl('summaryCourse').innerText = data.course;
                     hide('step1-content'); show('step2-content'); 
-                    getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300"; getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
-                } else alert("Registration Failed");
-            } catch(e) { alert("Server Error"); }
+                    getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300"; 
+                    getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
+                } else {
+                    // SERVER ERROR FOUND
+                    alert("Registration Failed: " + (responseData.error || "Unknown Server Error"));
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("Connection Error! Please check:\n1. Is the Backend URL correct?\n2. Is the Server running on Render?"); 
+            } finally {
+                btn.innerText = originalText; btn.disabled = false;
+            }
         }
 
-        // 2. ADM FEE
-        async function processAdmissionPayment() {
-            show('paymentLoader');
-            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, regFeeStatus: "Paid" }) });
-            setTimeout(() => {
-                hide('paymentLoader'); hide('step2-content'); show('step3-content');
-                getEl('credUsername').innerText = currentUser.mobile; getEl('credPassword').innerText = currentUser.dob; getEl('credAppId').innerText = currentUser.applicationId;
-            }, 2000);
-        }
-
-        // 3. LOGIN
+        // --- 2. LOGIN ---
         async function handleLogin(e) {
             e.preventDefault();
             const btn = getEl('loginBtn'); btn.innerText = "Verifying...";
@@ -411,9 +430,10 @@
                 if(res.ok) {
                     currentUser = data.student;
                     initDashboard(currentUser);
-                    hide('loginFlow'); show('dashboardFlow'); getEl('publicHeader').classList.add('hidden');
+                    hide('loginFlow'); show('dashboardFlow'); 
+                    if(getEl('publicHeader')) getEl('publicHeader').classList.add('hidden');
                 } else alert(data.error);
-            } catch(e) { alert("Error logging in"); }
+            } catch(e) { alert("Login Error: Server not reachable"); }
             finally { btn.innerText = "Secure Login"; }
         }
 
@@ -421,35 +441,40 @@
             getEl('sidebarName').innerText = user.fullName; getEl('sidebarAppId').innerText = user.applicationId; getEl('sidebarInitials').innerText = user.fullName.charAt(0);
             getEl('dashNameHome').innerText = user.fullName.split(' ')[0]; getEl('dashCourseHome').innerText = user.course;
             
-            // App Form
-            getEl('appFullName').innerText = user.fullName; getEl('appMobile').innerText = user.mobile; getEl('appAadhaar').innerText = user.aadhaar; getEl('appCourse').innerText = user.course;
+            if(getEl('appFullName')) getEl('appFullName').innerText = user.fullName;
+            if(getEl('appMobile')) getEl('appMobile').innerText = user.mobile;
+            if(getEl('appAadhaar')) getEl('appAadhaar').innerText = user.aadhaar;
+            if(getEl('appCourse')) getEl('appCourse').innerText = user.course;
             
-            // ID Card Data
             getEl('idCardName').innerText = user.fullName; getEl('idCardNo').innerText = "ID: " + user.applicationId; getEl('idCardCourseDisplay').innerText = user.course; getEl('idCardDob').innerText = user.dob;
-            getEl('receiptDate1').innerText = user.date;
-
-            // Load Hostel State
+            
             if(user.hostelRoom && user.hostelRoom !== "Not Booked") {
-                // Show Dashboard, Hide Selection
-                hide('hostelSelectionView'); show('hostelDashboardView');
                 getEl('myRoomDisplay').innerText = user.hostelRoom;
                 getEl('dashHostelStatus').innerText = "Booked";
                 getEl('dashHostelStatus').className = "text-xl font-bold text-green-600";
             }
 
-            // Load Mess Fee State
-            if(user.messFeeStatus === "Paid") {
-                hide('messActions'); show('messPaidBadge');
-            }
+            if(user.messFeeStatus === "Paid") { hide('messActions'); show('messPaidBadge'); }
 
             if(user.appFeeStatus === "Paid") {
                 getEl('submitAppBtn').innerText = "Details Saved & Fee Paid"; getEl('submitAppBtn').className = "px-8 py-3 bg-green-600 text-white font-bold rounded-lg cursor-not-allowed opacity-80"; getEl('submitAppBtn').disabled = true;
                 getEl('dashAppStatus').innerText = "Submitted"; getEl('dashAppStatus').className = "text-xl font-bold text-green-600";
-                show('appFeeReceiptRow'); getEl('receiptDate2').innerText = new Date().toLocaleDateString();
+                show('appFeeReceiptRow');
             }
         }
 
-        // 4. APP FEE
+        // --- 3. OTHER FUNCTIONS ---
+        async function processAdmissionPayment() {
+            show('paymentLoader');
+            try {
+                await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, regFeeStatus: "Paid" }) });
+                setTimeout(() => {
+                    hide('paymentLoader'); hide('step2-content'); show('step3-content');
+                    getEl('credUsername').innerText = currentUser.mobile; getEl('credPassword').innerText = currentUser.dob; getEl('credAppId').innerText = currentUser.applicationId;
+                }, 2000);
+            } catch(e) { alert("Payment Error"); hide('paymentLoader'); }
+        }
+
         async function handleApplicationSubmit(e) {
             e.preventDefault();
             const updateData = { applicationId: currentUser.applicationId, email: getEl('appEmail').value, address: getEl('appAddress').value, city: getEl('appCity').value, state: getEl('appState').value, pincode: getEl('appPincode').value };
@@ -462,11 +487,21 @@
             alert("Paid Successfully!"); currentUser.appFeeStatus = "Paid"; initDashboard(currentUser);
         }
 
-        // 5. UPLOADS (PHOTO LOGIC)
+        function verifyMobile() {
+            if(getEl('mobile').value.length!==10) return alert("Invalid Mobile");
+            const btn = getEl('verifyBtn'); btn.innerText = "Sending...";
+            setTimeout(() => { 
+                let otp = prompt("OTP: 1234");
+                if(otp==="1234") { getEl('verifiedBadge').classList.remove('hidden'); btn.classList.add('hidden'); }
+                else { alert("Invalid OTP"); btn.innerText = "Send OTP"; }
+            }, 1000);
+        }
+
         function previewFile(inp, img) {
             const f = getEl(inp).files[0];
             if(f) { const r = new FileReader(); r.onload = e => { getEl(img).src=e.target.result; getEl(img).style.display='block'; if(inp==='filePhoto') tempPhotoUrl=e.target.result; }; r.readAsDataURL(f); }
         }
+        
         async function uploadCert(type, btnId) {
             if(!currentUser) return alert("Session Expired");
             const f = getEl(btnId.replace('btn','file')).files[0];
@@ -475,49 +510,37 @@
             const fd = new FormData(); fd.append("file", f); fd.append("studentName", currentUser.fullName); fd.append("docType", type);
             try {
                 const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
-                if(res.ok) { alert("Uploaded"); btn.innerText = "Done"; }
-                else alert("Failed");
+                if(res.ok) { 
+                    const data = await res.json();
+                    if(type==='Passport Photo') currentUser.profilePhotoUrl = data.link;
+                    alert("Uploaded"); btn.innerText = "Done"; 
+                } else alert("Failed");
             } catch(e) { alert("Error"); }
         }
 
-        // 6. HOSTEL (ROOM ALLOCATION + MESS)
         function selectHostel(type, fee) { hostelBooking = { type, fee }; getEl('selectedHostelType').innerText = type; hide('hostelSelectionView'); show('hostelPaymentView'); }
+        
         async function payHostelFee() {
-            // Allocate Random Room & Update Backend
             const room = "Block " + ["A","B","C"][Math.floor(Math.random()*3)] + " - " + Math.floor(Math.random()*300+100);
-            
-            await fetch(`${API}/update-application`, { 
-                method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ applicationId: currentUser.applicationId, hostelRoom: room }) 
-            });
-
-            alert("Booked Successfully! Allotted Room: " + room);
-            hide('hostelPaymentView');
-            // Switch to Dashboard View
-            show('hostelDashboardView');
+            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, hostelRoom: room }) });
+            alert("Booked! Room: " + room);
+            hide('hostelPaymentView'); show('hostelDashboardView');
             getEl('myRoomDisplay').innerText = room;
-            
-            getEl('dashHostelStatus').innerText = "Booked";
-            getEl('dashHostelStatus').className = "text-xl font-bold text-green-600";
-            
-            show('hostelFeeReceiptRow'); getEl('hostelReceiptAmt').innerText = "₹" + hostelBooking.fee.toLocaleString(); getEl('receiptDate3').innerText = new Date().toLocaleDateString();
+            getEl('dashHostelStatus').innerText = "Booked"; getEl('dashHostelStatus').className = "text-xl font-bold text-green-600";
+            currentUser.hostelRoom = room;
             switchTab('home');
         }
 
-        // 7. MESS & EXTRAS
         async function payMessFee() {
-            await fetch(`${API}/update-application`, { 
-                method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ applicationId: currentUser.applicationId, messFeeStatus: "Paid" }) 
-            });
-            alert("Mess Fee Paid!");
-            hide('messActions'); show('messPaidBadge');
+            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, messFeeStatus: "Paid" }) });
+            alert("Paid!"); hide('messActions'); show('messPaidBadge');
         }
 
         function downloadReceipt(t, a) {
             const doc = new window.jspdf.jsPDF();
             doc.text("PPSU RECEIPT", 105, 20, {align:'center'}); doc.text(`Amount: INR ${a}`, 20, 40); doc.save('Receipt.pdf');
         }
+        function logout() { location.reload(); }
     </script>
 </body>
 </html>
