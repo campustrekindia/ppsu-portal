@@ -12,10 +12,10 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
-// 1. Google Sheet ID (For Data Logging)
+// 1. Google Sheet ID
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
 
-// 2. Cloudinary Configuration (For File Storage)
+// 2. Cloudinary Configuration (Your Keys)
 cloudinary.config({ 
   cloud_name: 'dvks6hfcb', 
   api_key: '695563669199692', 
@@ -39,43 +39,46 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Database Schema
 const StudentSchema = new mongoose.Schema({
-    // Registration Data
-    fullName: String, 
-    aadhaar: String, 
-    dob: String, 
-    course: String,
-    mobile: String, 
-    referral: String, 
-    applicationId: String, 
-    date: String,
-    // Fee Status
-    regFeeStatus: String, // ₹12,500
-    appFeeStatus: String, // ₹1,200
-    // App Data
-    email: String, 
-    address: String, 
-    city: String, 
-    state: String, 
-    pincode: String,
-    // Extras
-    hostelRoom: String,
-    messFeeStatus: String,
-    profilePhotoUrl: String
+    fullName: String, aadhaar: String, dob: String, course: String,
+    mobile: String, referral: String, applicationId: String, date: String,
+    regFeeStatus: String, appFeeStatus: String,
+    email: String, address: String, city: String, state: String, pincode: String,
+    hostelRoom: String, messFeeStatus: String, profilePhotoUrl: String
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// Auth Setup (Only needed for Google Sheets now)
-let KEY_PATH = 'credentials.json';
-if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
-    if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
-        KEY_PATH = '../credentials.json';
+// --- SECURE GOOGLE AUTH SETUP ---
+// This prevents "Secret Blocking" errors on GitHub
+let auth;
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+
+// Priority 1: Check for Environment Variable (Render Production)
+if (process.env.GOOGLE_CREDENTIALS) {
+    try {
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: SCOPES,
+        });
+    } catch (e) {
+        console.error("Error parsing GOOGLE_CREDENTIALS env var", e);
+    }
+} 
+// Priority 2: Check for Local File (Local Development)
+else {
+    let KEY_PATH = path.join(__dirname, 'credentials.json');
+    if (!fs.existsSync(KEY_PATH)) {
+        if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
+            KEY_PATH = path.join(__dirname, '../credentials.json');
+        }
+    }
+    if (fs.existsSync(KEY_PATH)) {
+        auth = new google.auth.GoogleAuth({
+            keyFile: KEY_PATH,
+            scopes: SCOPES,
+        });
     }
 }
-// We only need Spreadsheets scope now
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEY_PATH, 
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
 
 app.get('/', (req, res) => res.send('PPSU ERP Backend Live (Cloudinary)!'));
 
@@ -86,28 +89,27 @@ app.post('/api/register', async (req, res) => {
         if (existing) return res.status(400).json({ error: "Mobile number already registered." });
 
         const newStudent = new Student({ 
-            ...req.body, 
-            regFeeStatus: "Pending", 
-            appFeeStatus: "Pending",
-            hostelRoom: "Not Booked",
-            messFeeStatus: "Pending"
+            ...req.body, regFeeStatus: "Pending", appFeeStatus: "Pending",
+            hostelRoom: "Not Booked", messFeeStatus: "Pending"
         });
         await newStudent.save();
 
-        // Update Google Sheet
-        const sheets = google.sheets({ version: 'v4', auth });
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:O', 
-            valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [[
-                    req.body.fullName, req.body.aadhaar, req.body.dob, req.body.course, 
-                    req.body.mobile, req.body.referral, req.body.applicationId, 
-                    new Date().toLocaleDateString(), "Pending", "Pending", "", "", "", "", ""
-                ]]
-            }
-        });
+        // Update Google Sheet (Only if auth exists)
+        if (auth) {
+            const sheets = google.sheets({ version: 'v4', auth });
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Sheet1!A:O', 
+                valueInputOption: 'USER_ENTERED',
+                resource: {
+                    values: [[
+                        req.body.fullName, req.body.aadhaar, req.body.dob, req.body.course, 
+                        req.body.mobile, req.body.referral, req.body.applicationId, 
+                        new Date().toLocaleDateString(), "Pending", "Pending", "", "", "", "", ""
+                    ]]
+                }
+            });
+        }
 
         res.status(201).json({ message: "Registered", id: newStudent.applicationId });
     } catch (error) {
@@ -123,7 +125,7 @@ app.post('/api/login', async (req, res) => {
         const student = await Student.findOne({ mobile: mobile, dob: dob });
 
         if (!student) return res.status(401).json({ error: "Invalid Credentials" });
-        if (student.regFeeStatus !== "Paid") return res.status(403).json({ error: "Admission Fee (₹12,500) Pending. Please Register & Pay." });
+        if (student.regFeeStatus !== "Paid") return res.status(403).json({ error: "Admission Fee (₹12,500) Pending." });
 
         res.status(200).json({ message: "Success", student: student });
     } catch (error) {
@@ -135,40 +137,37 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/update-application', async (req, res) => {
     try {
         const { applicationId, ...updates } = req.body;
-
-        const updatedStudent = await Student.findOneAndUpdate(
-            { applicationId: applicationId },
-            { $set: updates },
-            { new: true }
-        );
+        const updatedStudent = await Student.findOneAndUpdate({ applicationId: applicationId }, { $set: updates }, { new: true });
 
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
         // Update Sheet
-        const sheets = google.sheets({ version: 'v4', auth });
-        const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
-        const rows = idList.data.values;
-        let rowIndex = -1;
+        if (auth) {
+            const sheets = google.sheets({ version: 'v4', auth });
+            const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
+            const rows = idList.data.values;
+            let rowIndex = -1;
 
-        if (rows && rows.length > 0) rowIndex = rows.findIndex(row => row[0] === applicationId);
+            if (rows && rows.length > 0) rowIndex = rows.findIndex(row => row[0] === applicationId);
 
-        if (rowIndex !== -1) {
-            const sheetRow = rowIndex + 1;
-            if (updates.regFeeStatus) {
-                await sheets.spreadsheets.values.update({
-                    spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
-                    valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
-                });
-            }
-            if (updates.email || updates.appFeeStatus) {
-                const rowValues = [
-                    updatedStudent.appFeeStatus, updatedStudent.email, updatedStudent.address, 
-                    updatedStudent.city, updatedStudent.state, updatedStudent.pincode
-                ];
-                await sheets.spreadsheets.values.update({
-                    spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
-                    valueInputOption: 'USER_ENTERED', resource: { values: [rowValues] }
-                });
+            if (rowIndex !== -1) {
+                const sheetRow = rowIndex + 1;
+                if (updates.regFeeStatus) {
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
+                        valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
+                    });
+                }
+                if (updates.email || updates.appFeeStatus) {
+                    const rowValues = [
+                        updatedStudent.appFeeStatus, updatedStudent.email, updatedStudent.address, 
+                        updatedStudent.city, updatedStudent.state, updatedStudent.pincode
+                    ];
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
+                        valueInputOption: 'USER_ENTERED', resource: { values: [rowValues] }
+                    });
+                }
             }
         }
         res.status(200).json({ message: "Updated", student: updatedStudent });
@@ -181,11 +180,10 @@ app.post('/api/update-application', async (req, res) => {
 app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).send("No file uploaded.");
 
-    // Stream upload to Cloudinary
     const uploadStream = cloudinary.uploader.upload_stream(
         { 
-            folder: "PPSU_Documents", // Creates this folder in your Cloudinary automatically
-            resource_type: "auto"
+            folder: "PPSU_Documents", 
+            resource_type: "auto" 
         },
         async (error, result) => {
             if (error) {
@@ -193,7 +191,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
                 return res.status(500).send("Upload Failed");
             }
 
-            // If Passport Photo, save URL to DB for ID Card
+            // Save Photo URL for ID Card
             if(req.body.docType === 'Passport Photo') {
                 await Student.findOneAndUpdate(
                     { fullName: req.body.studentName },
@@ -208,7 +206,6 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
         }
     );
 
-    // Pipe the buffer to Cloudinary
     stream.Readable.from(req.file.buffer).pipe(uploadStream);
 });
 
