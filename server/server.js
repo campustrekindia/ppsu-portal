@@ -11,16 +11,14 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
-// 1. Your Google Sheet ID (from the URL of your sheet)
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
-// 2. Your Google Drive Folder ID (from the URL of your folder)
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
 app.use(cors());
 app.use(express.json());
 
-// Memory storage for file uploads (max 5MB)
+// Memory storage for uploads
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }
@@ -31,9 +29,9 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
 
-// --- UPDATED DATABASE SCHEMA ---
-// This now matches your new Frontend inputs perfectly
+// --- DATABASE SCHEMA ---
 const StudentSchema = new mongoose.Schema({
+    // Step 1 Fields (Registration)
     fullName: String, 
     aadhaar: String, 
     dob: String, 
@@ -42,7 +40,7 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    // NEW FIELDS ADDED
+    // Step 2 Fields (My Application)
     email: String, 
     address: String, 
     city: String, 
@@ -51,8 +49,7 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// --- SMART KEY FINDER ---
-// Fixes the "File Not Found" error on Render by looking in both possible locations
+// --- KEY FILE FINDER ---
 let KEY_PATH = 'credentials.json';
 if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
     if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
@@ -65,21 +62,16 @@ const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
 });
 
-// --- ROUTES ---
+app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 
-app.get('/', (req, res) => res.send('PPSU Backend Live & Updated!'));
-
-// 1. REGISTRATION ROUTE
+// --- ROUTE 1: REGISTER (Basic Info Only) ---
 app.post('/api/register', async (req, res) => {
     try {
-        // Save to MongoDB
         const newStudent = new Student(req.body);
         await newStudent.save();
 
-        // Save to Google Sheets
+        // Add to Google Sheet (Basic info is filled, Address cols left empty for now)
         const sheets = google.sheets({ version: 'v4', auth });
-        
-        // We now append data to columns A through M (13 columns)
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
             range: 'Sheet1!A:M', 
@@ -94,24 +86,52 @@ app.post('/api/register', async (req, res) => {
                     req.body.referral,
                     req.body.applicationId, 
                     new Date().toLocaleDateString(),
-                    // NEW FIELDS
-                    req.body.email, 
-                    req.body.address, 
-                    req.body.city, 
-                    req.body.state, 
-                    req.body.pincode
+                    "", "", "", "", "" // Empty placeholders for Address fields
                 ]]
             }
         });
 
-        res.status(201).json({ message: "Registered & Saved!", id: newStudent.applicationId });
+        res.status(201).json({ message: "Registration Successful", id: newStudent.applicationId });
     } catch (error) {
         console.error("Registration Error:", error);
         res.status(500).json({ error: "Registration Failed" });
     }
 });
 
-// 2. UPLOAD ROUTE
+// --- ROUTE 2: UPDATE APPLICATION (New Route for Step 2) ---
+app.post('/api/update-application', async (req, res) => {
+    try {
+        const { applicationId, email, address, city, state, pincode } = req.body;
+
+        // Find the student by App ID and update their record
+        const updatedStudent = await Student.findOneAndUpdate(
+            { applicationId: applicationId },
+            { 
+                $set: { 
+                    email: email, 
+                    address: address, 
+                    city: city, 
+                    state: state, 
+                    pincode: pincode 
+                } 
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedStudent) {
+            return res.status(404).json({ error: "Student Record Not Found" });
+        }
+
+        console.log(`Updated record for ${applicationId}`);
+        res.status(200).json({ message: "Details Updated Successfully" });
+
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ error: "Update Failed" });
+    }
+});
+
+// --- ROUTE 3: UPLOAD ---
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
@@ -120,7 +140,6 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const bufferStream = new stream.PassThrough();
         bufferStream.end(req.file.buffer);
 
-        // Naming format: StudentName_DocType_Timestamp.jpg
         const fileName = `${req.body.studentName}_${req.body.docType}_${Date.now()}.jpg`;
 
         const fileMetadata = {
@@ -139,12 +158,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
             fields: 'id, webViewLink'
         });
 
-        res.status(200).json({ 
-            message: "Upload Successful", 
-            fileId: response.data.id, 
-            link: response.data.webViewLink 
-        });
-
+        res.status(200).json({ fileId: response.data.id, link: response.data.webViewLink });
     } catch (error) {
         console.error("Drive Upload Error:", error);
         res.status(500).send("Upload Failed");

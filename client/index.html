@@ -100,7 +100,7 @@
                              <div class="text-center z-10 p-6">
                                 <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"><i class="fa-solid fa-building-columns text-5xl text-ppsuRed"></i></div>
                                 <h3 class="text-xl font-bold text-gray-800">Established Legacy</h3>
-                                <p class="text-sm text-gray-500 mt-2">Nurturing Mind, Body and Soul since 1987</p>
+                                <p class="text-sm text-gray-500 mt-1">Nurturing Mind, Body and Soul since 1987</p>
                              </div>
                         </div>
                     </div>
@@ -158,31 +158,8 @@
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                                            <input type="email" id="email" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Residential Address</label>
-                                            <input type="text" id="address" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm" placeholder="House No, Street, Landmark">
-                                        </div>
-
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700">City</label>
-                                                <input type="text" id="city" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700">State</label>
-                                                <input type="text" id="state" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700">Pincode</label>
-                                                <input type="text" id="pincode" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm">
-                                            </div>
-                                        </div>
                                         <div><label class="block text-sm font-medium text-gray-700">Referral Name</label><input type="text" id="referral" required class="block w-full px-3 py-2.5 border rounded-lg sm:text-sm" placeholder="Enter Referral Name (Mandatory)"></div>
+                                        
                                         <div class="pt-4"><button type="submit" class="w-full py-3 px-4 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 transition">Proceed to Payment</button></div>
                                     </div>
                                 </form>
@@ -301,17 +278,38 @@
 
                 <div id="dash-app" class="max-w-4xl mx-auto hidden fade-in">
                     <form onsubmit="handleApplicationSubmit(event)" id="appFormDetails" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        
                         <div class="p-6 border-b border-gray-100">
                             <h3 class="text-lg font-bold text-gray-800 mb-4">Personal Details</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                                <div><label class="text-xs text-gray-500">Full Name</label><input type="text" id="appFullName" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
-                                <div><label class="text-xs text-gray-500">Mobile</label><input type="text" id="appMobile" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
-                                <div><label class="text-xs text-gray-500">Aadhaar Number</label><input type="text" id="appAadhaar" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
-                                <div><label class="text-xs text-gray-500">Course Applied</label><input type="text" id="appCourse" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
-                                <div><label class="text-xs text-gray-500">Address</label><input type="text" id="appAddress" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
-                                <div><label class="text-xs text-gray-500">City</label><input type="text" id="appCity" readonly class="w-full bg-slate-50 border rounded px-3 py-2"></div>
+                                <div><label class="text-xs text-gray-500">Full Name</label><input type="text" id="appFullName" readonly class="w-full bg-slate-100 border rounded px-3 py-2 cursor-not-allowed"></div>
+                                <div><label class="text-xs text-gray-500">Mobile</label><input type="text" id="appMobile" readonly class="w-full bg-slate-100 border rounded px-3 py-2 cursor-not-allowed"></div>
+                                <div><label class="text-xs text-gray-500">Aadhaar Number</label><input type="text" id="appAadhaar" readonly class="w-full bg-slate-100 border rounded px-3 py-2 cursor-not-allowed"></div>
+                                <div><label class="text-xs text-gray-500">Course Applied</label><input type="text" id="appCourse" readonly class="w-full bg-slate-100 border rounded px-3 py-2 cursor-not-allowed"></div>
+                                
+                                <div class="md:col-span-2">
+                                    <label class="text-xs text-gray-700 font-bold">Email Address</label>
+                                    <input type="email" id="appEmail" required class="w-full border rounded px-3 py-2 focus:border-ppsuRed outline-none" placeholder="Enter valid email">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs text-gray-700 font-bold">Residential Address</label>
+                                    <input type="text" id="appAddress" required class="w-full border rounded px-3 py-2 focus:border-ppsuRed outline-none" placeholder="House No, Street, Landmark">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-700 font-bold">City</label>
+                                    <input type="text" id="appCity" required class="w-full border rounded px-3 py-2 focus:border-ppsuRed outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-700 font-bold">State</label>
+                                    <input type="text" id="appState" required class="w-full border rounded px-3 py-2 focus:border-ppsuRed outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-700 font-bold">Pincode</label>
+                                    <input type="text" id="appPincode" required class="w-full border rounded px-3 py-2 focus:border-ppsuRed outline-none">
+                                </div>
                             </div>
                         </div>
+
                         <div class="p-6 border-b border-gray-100 bg-slate-50/50">
                             <h3 class="text-lg font-bold text-gray-800 mb-4">Parent Details</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -325,6 +323,7 @@
                                 <div><label class="text-xs text-gray-500">Aadhaar</label><input type="text" class="w-full border rounded px-3 py-2"></div>
                             </div>
                         </div>
+
                         <div class="p-6 bg-slate-50 border-t border-gray-200 text-right flex justify-end gap-4">
                              <button type="button" id="downloadAppBtn" onclick="downloadApplicationForm()" class="hidden border border-ppsuRed text-ppsuRed px-6 py-3 rounded-lg font-bold hover:bg-red-50">Download PDF</button>
                              <button type="submit" id="submitAppBtn" class="bg-ppsuDark text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 shadow-lg">Pay Application Fee (₹1,200) & Submit</button>
@@ -552,12 +551,12 @@
         function verifyOTP() { if(getEl('otpInput').value==='1234'){ isMobileVerified=true; hide('otpSection'); hide('sendOtpBtn'); show('verifiedBadge'); getEl('mobile').readOnly=true; } else alert("Wrong OTP"); }
         function goToStep(n) { hide('step1-content'); hide('step2-content'); hide('step3-content'); show('step'+n+'-content'); }
 
-        // --- 1. REGISTRATION LOGIC ---
+        // --- 1. REGISTRATION LOGIC (STEP 1) ---
         async function handleRegistration(e) {
             e.preventDefault();
             if (!isMobileVerified) return alert("Please verify mobile number first.");
             
-            // Collect Form Data
+            // Collect Basic Data
             formData.fullName = getEl('fullName').value;
             formData.aadhaar = getEl('aadhaar').value;
             formData.dob = getEl('dob').value;
@@ -565,17 +564,10 @@
             formData.mobile = getEl('mobile').value;
             formData.referral = getEl('referral').value;
             
-            // New Fields
-            formData.email = getEl('email').value;
-            formData.address = getEl('address').value;
-            formData.city = getEl('city').value;
-            formData.state = getEl('state').value;
-            formData.pincode = getEl('pincode').value;
-
             // Generate App ID
             formData.applicationId = '2026' + Math.floor(100000 + Math.random() * 900000);
 
-            // API Call
+            // API Call - Send only basic data first
             const API_URL = "https://ppsu-backend.onrender.com/api/register"; 
             
             const submitBtn = document.querySelector('#registrationForm button[type="submit"]');
@@ -612,7 +604,6 @@
             setTimeout(() => {
                 hide('paymentLoader');
                 formData.transactionId = 'PPSU-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                if(!formData.applicationId) formData.applicationId = '2026' + Math.floor(100000 + Math.random() * 900000);
                 formData.date = new Date().toLocaleDateString();
                 
                 getEl('credUsername').innerText = formData.mobile;
@@ -622,7 +613,64 @@
             }, 2000);
         }
 
-        // --- 3. UPLOAD LOGIC (REAL) ---
+        // --- 3. APPLICATION SUBMIT (STEP 2: AFTER LOGIN) ---
+        async function handleApplicationSubmit(e) { 
+            e.preventDefault(); 
+            if(isAppFeePaid) return alert("Already submitted!"); 
+            
+            // Collect New Details
+            const updateData = {
+                applicationId: formData.applicationId, 
+                email: getEl('appEmail').value,
+                address: getEl('appAddress').value,
+                city: getEl('appCity').value,
+                state: getEl('appState').value,
+                pincode: getEl('appPincode').value
+            };
+
+            const submitBtn = getEl('submitAppBtn');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Saving...";
+            
+            try {
+                // Send update to backend
+                const response = await fetch("https://ppsu-backend.onrender.com/api/update-application", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if(response.ok) {
+                    // Update Local State
+                    formData.email = updateData.email;
+                    formData.address = updateData.address;
+                    formData.city = updateData.city;
+                    formData.state = updateData.state;
+                    formData.pincode = updateData.pincode;
+
+                    show('appPayModal'); // Proceed to Payment
+                } else {
+                    alert("Failed to save application details. Please try again.");
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Server Error while saving.");
+            } finally {
+                submitBtn.innerText = originalText;
+            }
+        }
+
+        function closeAppPayModal() { hide('appPayModal'); }
+        function confirmAppPayment() {
+            isAppFeePaid = true; hide('appPayModal');
+            getEl('submitAppBtn').innerText = "Submitted Successfully"; getEl('submitAppBtn').classList.add('bg-green-600', 'cursor-not-allowed'); getEl('submitAppBtn').disabled = true;
+            show('downloadAppBtn'); show('appDownloadLinkHome');
+            getEl('dashAppStatus').innerText = "Submitted"; getEl('dashAppStatus').classList.replace('text-yellow-600', 'text-green-600'); 
+            show('appFeeReceiptRow'); getEl('receiptDate2').innerText = new Date().toLocaleDateString(); show('appFeeBadge');
+            alert("Application Submitted!"); switchDashTab('home');
+        }
+
+        // --- 4. UPLOAD LOGIC ---
         function handleFileSelect(inputId, previewId, placeholderId) {
             const fileInput = getEl(inputId);
             const previewImg = getEl(previewId);
@@ -640,20 +688,13 @@
         }
 
         async function uploadCert(docType, btnId) {
-            // Check if student is registered
             const studentName = formData.fullName;
-            if (!studentName) {
-                alert("Please complete registration first so we can attach your name to the file.");
-                return;
-            }
+            if (!studentName) return alert("Please complete registration first.");
 
-            const fileInputId = btnId.replace('btn', 'file'); // e.g. btn10th -> file10th
+            const fileInputId = btnId.replace('btn', 'file'); 
             const fileInput = getEl(fileInputId);
             
-            if (!fileInput.files[0]) {
-                alert("Please select a file first.");
-                return;
-            }
+            if (!fileInput.files[0]) return alert("Please select a file first.");
 
             const btn = getEl(btnId);
             const originalText = btn.innerText;
@@ -688,7 +729,7 @@
             }
         }
 
-        // --- 4. NAVIGATION & DASHBOARD ---
+        // --- 5. NAVIGATION ---
         function showHome() { hide('loginFlow'); hide('dashboardFlow'); hide('registrationFlow'); show('homeFlow'); show('mainHeader'); show('mainContainer'); }
         function showRegistration() { hide('loginFlow'); hide('dashboardFlow'); hide('homeFlow'); show('registrationFlow'); show('mainHeader'); show('mainContainer'); goToStep(1); }
         function showLoginScreen() { hide('registrationFlow'); hide('dashboardFlow'); hide('homeFlow'); show('loginFlow'); show('mainHeader'); show('mainContainer'); if(formData.mobile) getEl('loginMobile').value=formData.mobile; if(formData.dob) getEl('loginPass').value=formData.dob; }
@@ -699,29 +740,30 @@
             const course = formData.course || "B.Tech Computer Engineering";
             const appID = formData.applicationId || "20260001";
             
-            // Populate Dashboard
             getEl('sidebarName').innerText = name;
             getEl('sidebarInitials').innerText = name.charAt(0);
             getEl('sidebarAppId').innerText = appID;
             getEl('dashNameHome').innerText = name;
             getEl('dashCourseHome').innerText = course;
             
-            // Populate App Form in Dashboard
+            // Populate Read-Only Fields
             getEl('appFullName').value = name;
             getEl('appMobile').value = formData.mobile || "9876543210";
             getEl('appAadhaar').value = formData.aadhaar || "123456789012";
             getEl('appCourse').value = course;
+
+            // Pre-fill Editable if exists
+            getEl('appEmail').value = formData.email || "";
             getEl('appAddress').value = formData.address || "";
             getEl('appCity').value = formData.city || "";
+            getEl('appState').value = formData.state || "";
+            getEl('appPincode').value = formData.pincode || "";
 
             // ID Card
             getEl('idCardName').innerText = name;
             getEl('idCardCourseDisplay').innerText = course;
             getEl('idCardNo').innerText = appID;
             getEl('idCardDob').innerText = formData.dob || "01/01/2005";
-
-            getEl('feeStructCourse').innerText = course;
-            getEl('receiptDate1').innerText = formData.date || new Date().toLocaleDateString();
 
             hide('loginFlow'); hide('mainHeader'); hide('mainContainer'); show('dashboardFlow');
         }
@@ -738,7 +780,7 @@
             });
         }
 
-        // --- 5. HOSTEL & PDFS ---
+        // --- 6. HOSTEL ---
         function selectHostel(type, fee) {
             hostelBooking = { status: 'selected', type: type, fee: fee };
             getEl('selectedHostelType').innerText = type;
@@ -758,19 +800,7 @@
             alert(`Payment Successful! Room Booked.`);
         }
 
-        // App Fee
-        function handleApplicationSubmit(e) { e.preventDefault(); if(isAppFeePaid) return alert("Already submitted!"); show('appPayModal'); }
-        function closeAppPayModal() { hide('appPayModal'); }
-        function confirmAppPayment() {
-            isAppFeePaid = true; hide('appPayModal');
-            getEl('submitAppBtn').innerText = "Submitted Successfully"; getEl('submitAppBtn').classList.add('bg-green-600', 'cursor-not-allowed'); getEl('submitAppBtn').disabled = true;
-            show('downloadAppBtn'); show('appDownloadLinkHome');
-            getEl('dashAppStatus').innerText = "Submitted"; getEl('dashAppStatus').classList.replace('text-yellow-600', 'text-green-600'); 
-            show('appFeeReceiptRow'); getEl('receiptDate2').innerText = new Date().toLocaleDateString(); show('appFeeBadge');
-            alert("Application Submitted!"); switchDashTab('home');
-        }
-
-        // PDF Generation
+        // --- 7. PDF ---
         async function downloadReceipt(title, amount) {
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             doc.setFillColor(238, 63, 54); doc.rect(0, 0, 210, 5, 'F');
