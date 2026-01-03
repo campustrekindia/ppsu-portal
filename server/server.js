@@ -5,22 +5,24 @@ const cors = require('cors');
 const { google } = require('googleapis');
 const multer = require('multer');
 const stream = require('stream');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
-// --- CONFIGURATION (UPDATED WITH YOUR LINKS) ---
+// --- CONFIGURATION ---
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
-// -------------------------------------------
+// ---------------------
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Multer for File Uploads (Memory Storage)
+// Multer for File Uploads
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }
 });
 
 // Database Connection
@@ -34,23 +36,36 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
+// --- SMART KEY FILE FINDER ---
+// Render puts secret files in the repo root, but we run inside /server
+// This block finds the file wherever it is.
+let KEY_PATH = 'credentials.json';
+if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
+    // If not in server folder, look one level up
+    if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
+        KEY_PATH = '../credentials.json';
+        console.log("Found credentials in parent directory.");
+    } else {
+        console.error("CRITICAL ERROR: credentials.json not found in server or root!");
+    }
+}
+// -----------------------------
+
 // Google Auth Setup
 const auth = new google.auth.GoogleAuth({
-    keyFile: 'credentials.json', // Must be in server folder
+    keyFile: KEY_PATH, 
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
 });
 
 // ROUTES
 app.get('/', (req, res) => res.send('PPSU Google Integrated Backend Live!'));
 
-// 1. Register: Save to MongoDB + Google Sheet
+// 1. Register
 app.post('/api/register', async (req, res) => {
     try {
-        // A. Save to MongoDB
         const newStudent = new Student(req.body);
         await newStudent.save();
 
-        // B. Save to Google Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -73,14 +88,12 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// 2. Upload File: Save to Google Drive
+// 2. Upload
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
         
         const drive = google.drive({ version: 'v3', auth });
-        
-        // Convert buffer to stream
         const bufferStream = new stream.PassThrough();
         bufferStream.end(req.file.buffer);
 
