@@ -40,7 +40,8 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    paymentStatus: String, // Track Payment
+    regFeeStatus: String, // Tracks the ₹12,500 payment
+    appFeeStatus: String, // Tracks the ₹1,200 payment
     // App Details
     email: String, 
     address: String, 
@@ -64,16 +65,20 @@ const auth = new google.auth.GoogleAuth({
 
 app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 
-// --- ROUTE 1: REGISTER (Basic Info) ---
+// --- ROUTE 1: REGISTER (Basic Info + Admission Fee Pending) ---
 app.post('/api/register', async (req, res) => {
     try {
-        const newStudent = new Student({ ...req.body, paymentStatus: "Pending" });
+        const newStudent = new Student({ 
+            ...req.body, 
+            regFeeStatus: "Pending",
+            appFeeStatus: "Pending" 
+        });
         await newStudent.save();
 
         const sheets = google.sheets({ version: 'v4', auth });
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:N', 
+            range: 'Sheet1!A:O', 
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[
@@ -85,8 +90,9 @@ app.post('/api/register', async (req, res) => {
                     req.body.referral,
                     req.body.applicationId, 
                     new Date().toLocaleDateString(),
-                    "Pending", // Payment Status Column I
-                    "", "", "", "", "" // Empty Address Columns J-N
+                    "Pending", // I: Reg Fee Status
+                    "Pending", // J: App Fee Status
+                    "", "", "", "", "" // K-O: Address Fields
                 ]]
             }
         });
@@ -98,14 +104,17 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- ROUTE 2: UPDATE APPLICATION (Address Info) ---
+// --- ROUTE 2: UPDATE APPLICATION (Address Info + App Fee) ---
 app.post('/api/update-application', async (req, res) => {
     try {
-        const { applicationId, email, address, city, state, pincode } = req.body;
+        const { applicationId, email, address, city, state, pincode, appFeeStatus } = req.body;
+
+        const updateFields = { email, address, city, state, pincode };
+        if(appFeeStatus) updateFields.appFeeStatus = appFeeStatus;
 
         const updatedStudent = await Student.findOneAndUpdate(
             { applicationId: applicationId },
-            { $set: { email, address, city, state, pincode } },
+            { $set: updateFields },
             { new: true }
         );
 
@@ -129,14 +138,17 @@ app.post('/api/update-application', async (req, res) => {
 
         if (rowIndex !== -1) {
             const sheetRow = rowIndex + 1;
-            // Update Columns J to N (Address fields)
+            // Update Columns J (App Fee) and K-O (Address)
+            const rowValues = [
+                appFeeStatus || "Pending",
+                email, address, city, state, pincode
+            ];
+
             await sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `Sheet1!J${sheetRow}:N${sheetRow}`, 
+                range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
                 valueInputOption: 'USER_ENTERED',
-                resource: {
-                    values: [[email, address, city, state, pincode]]
-                }
+                resource: { values: [rowValues] }
             });
         }
 
@@ -153,7 +165,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
         
-        // Fallback names to prevent crashes
+        // Fallback names
         const safeName = req.body.studentName ? req.body.studentName.replace(/[^a-zA-Z0-9]/g, '_') : "Student";
         const safeDoc = req.body.docType ? req.body.docType.replace(/[^a-zA-Z0-9]/g, '_') : "Doc";
 
