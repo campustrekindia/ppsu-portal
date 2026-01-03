@@ -11,6 +11,7 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
+// Ensure these IDs are correct for your specific Google Sheet and Drive Folder
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
@@ -29,15 +30,27 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
 
-// Database Schema (Includes all fields)
+// Database Schema (Includes all fields for Step 1 and Step 2)
 const StudentSchema = new mongoose.Schema({
-    fullName: String, aadhaar: String, dob: String, course: String,
-    mobile: String, referral: String, applicationId: String, date: String,
-    email: String, address: String, city: String, state: String, pincode: String
+    // Step 1: Registration Data
+    fullName: String, 
+    aadhaar: String, 
+    dob: String, 
+    course: String,
+    mobile: String, 
+    referral: String, 
+    applicationId: String, 
+    date: String,
+    // Step 2: Application Details
+    email: String, 
+    address: String, 
+    city: String, 
+    state: String, 
+    pincode: String
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// Auth Setup
+// Auth Setup (Smart Path Finding)
 let KEY_PATH = 'credentials.json';
 if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
     if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
@@ -51,7 +64,7 @@ const auth = new google.auth.GoogleAuth({
 
 app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 
-// --- ROUTE 1: REGISTER (Basic Info Only) ---
+// --- ROUTE 1: REGISTER (Step 1 - Basic Info) ---
 app.post('/api/register', async (req, res) => {
     try {
         const newStudent = new Student(req.body);
@@ -59,7 +72,8 @@ app.post('/api/register', async (req, res) => {
 
         const sheets = google.sheets({ version: 'v4', auth });
         
-        // Append Basic Data (Columns A-H), leave Address (I-M) empty
+        // Append Basic Data (Columns A-H). Leave Address columns (I-M) empty for now.
+        // Order: FullName, Aadhaar, DOB, Course, Mobile, Referral, AppID, Date, Email, Addr, City, State, Pin
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
             range: 'Sheet1!A:M', 
@@ -74,7 +88,7 @@ app.post('/api/register', async (req, res) => {
                     req.body.referral,
                     req.body.applicationId, 
                     new Date().toLocaleDateString(),
-                    "", "", "", "", "" // Empty slots for Email, Address, City, State, Pincode
+                    "", "", "", "", "" // Empty placeholders for Step 2
                 ]]
             }
         });
@@ -86,7 +100,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- ROUTE 2: UPDATE APPLICATION (Address Info) ---
+// --- ROUTE 2: UPDATE APPLICATION (Step 2 - Address Info) ---
 app.post('/api/update-application', async (req, res) => {
     try {
         const { applicationId, email, address, city, state, pincode } = req.body;
@@ -103,7 +117,7 @@ app.post('/api/update-application', async (req, res) => {
         // 2. Update Google Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         
-        // A. Read Column G (App IDs) to find the row number
+        // A. Read Column G (App IDs) to find which row belongs to this student
         const idList = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: 'Sheet1!G:G', 
@@ -131,6 +145,8 @@ app.post('/api/update-application', async (req, res) => {
                 }
             });
             console.log(`Updated Sheet Row ${sheetRow} for AppID ${applicationId}`);
+        } else {
+            console.log(`AppID ${applicationId} not found in Sheet.`);
         }
 
         res.status(200).json({ message: "Details Updated Successfully" });
@@ -146,8 +162,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
         
-        const safeName = req.body.studentName ? req.body.studentName.replace(/\s+/g, '_') : "Unknown";
-        const safeDoc = req.body.docType ? req.body.docType.replace(/\s+/g, '_') : "Doc";
+        // Safeguard names to prevent errors if frontend data is missing
+        const safeName = req.body.studentName ? req.body.studentName.replace(/\s+/g, '_') : "UnknownStudent";
+        const safeDoc = req.body.docType ? req.body.docType.replace(/\s+/g, '_') : "Document";
 
         const drive = google.drive({ version: 'v3', auth });
         const bufferStream = new stream.PassThrough();
