@@ -13,15 +13,7 @@
     <script>
         tailwind.config = {
             theme: {
-                extend: {
-                    colors: { 
-                        ppsuRed: '#D32F2F', 
-                        ppsuDark: '#1E293B',
-                        ppsuBlue: '#2563EB',
-                        bgLight: '#F1F5F9'
-                    },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
-                }
+                extend: { colors: { ppsuRed: '#D32F2F', ppsuDark: '#1E293B' }, fontFamily: { sans: ['Inter', 'sans-serif'] } }
             }
         }
     </script>
@@ -34,9 +26,11 @@
         .sidebar-link.active { background: #D32F2F; color: white; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-        /* Smooth inputs */
-        .erp-input { @apply w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ppsuRed focus:border-transparent outline-none transition-all; }
-        .erp-label { @apply block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1; }
+        
+        /* Modern Inputs */
+        .erp-input { @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-ppsuRed focus:border-transparent outline-none transition-all text-gray-700; }
+        .erp-label { @apply block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5; }
+        .read-only-field { @apply w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed font-medium; }
     </style>
 </head>
 <body class="text-gray-800 h-screen overflow-hidden flex flex-col">
@@ -61,7 +55,6 @@
                 <img src="https://timess3spore.s3.amazonaws.com/ndata/media/College/college_desktop_webp/1680463347.webp" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-r from-gray-900/90 via-gray-900/60 to-transparent"></div>
             </div>
-
             <div class="relative z-10 max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div class="text-white space-y-8">
                     <div>
@@ -69,14 +62,9 @@
                         <h1 class="text-5xl md:text-7xl font-bold leading-tight">University <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">ERP Portal</span></h1>
                     </div>
                     <p class="text-lg text-gray-300 max-w-lg leading-relaxed">Streamlined admissions, fee management, and academic tracking for the next generation of leaders.</p>
-                    
                     <div class="flex flex-wrap gap-4">
-                        <button onclick="showRegistration()" class="px-8 py-4 bg-ppsuRed text-white font-bold rounded-xl shadow-lg hover:bg-red-600 transition flex items-center gap-2">
-                            <span>Apply for Admission</span> <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                        <button onclick="showLoginScreen()" class="px-8 py-4 bg-white/10 backdrop-blur border border-white/20 text-white font-bold rounded-xl hover:bg-white hover:text-black transition flex items-center gap-2">
-                            <i class="fa-solid fa-user-graduate"></i> Student Login
-                        </button>
+                        <button onclick="showRegistration()" class="px-8 py-4 bg-ppsuRed text-white font-bold rounded-xl shadow-lg hover:bg-red-600 transition flex items-center gap-2"><span>Apply for Admission</span> <i class="fa-solid fa-arrow-right"></i></button>
+                        <button onclick="showLoginScreen()" class="px-8 py-4 bg-white/10 backdrop-blur border border-white/20 text-white font-bold rounded-xl hover:bg-white hover:text-black transition flex items-center gap-2"><i class="fa-solid fa-user-graduate"></i> Student Login</button>
                     </div>
                 </div>
             </div>
@@ -85,15 +73,8 @@
         <div id="registrationFlow" class="hidden min-h-[calc(100vh-80px)] bg-gray-50 py-10 px-4">
             <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 fade-in">
                 <div class="bg-ppsuDark p-6 text-white flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xl font-bold">New Student Registration</h2>
-                        <p class="text-xs text-gray-400">Step <span id="regStepNum">1</span> of 3</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <div id="step1-dot" class="w-3 h-3 rounded-full bg-ppsuRed"></div>
-                        <div id="step2-dot" class="w-3 h-3 rounded-full bg-gray-600"></div>
-                        <div id="step3-dot" class="w-3 h-3 rounded-full bg-gray-600"></div>
-                    </div>
+                    <div><h2 class="text-xl font-bold">New Student Registration</h2><p class="text-xs text-gray-400">Step <span id="regStepNum">1</span> of 3</p></div>
+                    <div class="flex gap-2"><div id="step1-dot" class="w-3 h-3 rounded-full bg-ppsuRed"></div><div id="step2-dot" class="w-3 h-3 rounded-full bg-gray-600"></div><div id="step3-dot" class="w-3 h-3 rounded-full bg-gray-600"></div></div>
                 </div>
 
                 <div id="step1-content" class="p-8">
@@ -102,20 +83,13 @@
                             <div><label class="erp-label">Full Name</label><input type="text" id="fullName" required class="erp-input" placeholder="As per Aadhaar"></div>
                             <div><label class="erp-label">Aadhaar Number</label><input type="text" id="aadhaar" required maxlength="12" class="erp-input" placeholder="12 Digit Number"></div>
                             <div><label class="erp-label">Date of Birth</label><input type="date" id="dob" required class="erp-input"></div>
-                            <div>
-                                <label class="erp-label">Select Program</label>
-                                <select id="course" required class="erp-input">
-                                    <option value="" disabled selected>Select...</option>
-                                    <optgroup label="Engineering"><option value="B.Tech Computer Engineering">B.Tech Computer</option><option value="B.Tech Civil Engineering">B.Tech Civil</option></optgroup>
-                                    <optgroup label="Management"><option value="BBA">BBA</option><option value="MBA">MBA</option></optgroup>
-                                </select>
-                            </div>
+                            <div><label class="erp-label">Select Program</label><select id="course" required class="erp-input"><option value="" disabled selected>Select...</option><optgroup label="Engineering"><option value="B.Tech Computer Engineering">B.Tech Computer</option><option value="B.Tech Civil Engineering">B.Tech Civil</option></optgroup><optgroup label="Management"><option value="BBA">BBA</option><option value="MBA">MBA</option></optgroup></select></div>
                             
                             <div class="md:col-span-2">
-                                <label class="erp-label">Mobile Number (Verification Required)</label>
+                                <label class="erp-label">Mobile Number</label>
                                 <div class="flex gap-2">
-                                    <input type="tel" id="mobile" required maxlength="10" class="erp-input" placeholder="10-digit Mobile" oninput="document.getElementById('verifyBtn').classList.remove('hidden'); document.getElementById('verifiedBadge').classList.add('hidden');">
-                                    <button type="button" id="verifyBtn" onclick="verifyMobile()" class="px-4 bg-gray-800 text-white rounded-lg text-sm font-bold whitespace-nowrap hover:bg-black transition">Send OTP</button>
+                                    <input type="tel" id="mobile" required maxlength="10" class="erp-input" placeholder="10-digit Mobile" oninput="document.getElementById('verifyBtn').classList.remove('hidden');">
+                                    <button type="button" id="verifyBtn" onclick="verifyMobile()" class="px-4 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-black transition">Send OTP</button>
                                     <div id="verifiedBadge" class="hidden px-4 flex items-center bg-green-100 text-green-700 rounded-lg text-sm font-bold border border-green-200"><i class="fa-solid fa-check mr-1"></i> Verified</div>
                                 </div>
                             </div>
@@ -128,31 +102,23 @@
                 <div id="step2-content" class="hidden p-12 text-center">
                     <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-indian-rupee-sign text-4xl text-blue-600"></i></div>
                     <h3 class="text-2xl font-bold text-gray-900 mb-2">Admission Fee Payment</h3>
-                    <p class="text-gray-500 mb-8 max-w-md mx-auto">To confirm your registration and generate your ERP credentials, a non-refundable admission fee is required.</p>
-                    
+                    <p class="text-gray-500 mb-8 max-w-md mx-auto">Non-refundable admission fee to confirm your seat.</p>
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 max-w-sm mx-auto mb-8 text-left shadow-sm">
-                        <div class="flex justify-between mb-2 text-sm"><span class="text-gray-500">Applicant</span><span class="font-bold text-gray-800" id="summaryName">--</span></div>
                         <div class="flex justify-between mb-4 pb-4 border-b border-gray-200 text-sm"><span class="text-gray-500">Course</span><span class="font-bold text-gray-800" id="summaryCourse">--</span></div>
                         <div class="flex justify-between items-center"><span class="font-bold text-lg text-gray-800">Total</span><span class="text-2xl font-bold text-ppsuRed">₹12,500</span></div>
                     </div>
                     <button onclick="processAdmissionPayment()" class="w-full max-w-sm py-3.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-md transition">Pay Securely Now</button>
-                    <div id="paymentLoader" class="hidden mt-6"><div class="loader mx-auto"></div><p class="text-xs text-gray-400 mt-2">Processing secure transaction...</p></div>
+                    <div id="paymentLoader" class="hidden mt-6"><div class="loader mx-auto"></div><p class="text-xs text-gray-400 mt-2">Processing...</p></div>
                 </div>
 
                 <div id="step3-content" class="hidden p-12 text-center">
                     <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-green-100"><i class="fa-solid fa-check text-5xl text-green-600"></i></div>
                     <h3 class="text-3xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
-                    <p class="text-gray-500 mb-8">Welcome to PPSU. Here are your ERP login credentials.</p>
-                    
-                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 max-w-sm mx-auto mb-8 text-left relative">
-                        <div class="absolute top-4 right-4 text-blue-200"><i class="fa-solid fa-id-card text-6xl opacity-20"></i></div>
-                        <p class="text-xs font-bold text-blue-600 uppercase mb-1">Username</p>
-                        <p class="text-xl font-mono font-bold text-gray-900 mb-4" id="credUsername">--</p>
-                        <p class="text-xs font-bold text-blue-600 uppercase mb-1">Password</p>
-                        <p class="text-xl font-mono font-bold text-gray-900" id="credPassword">--</p>
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 max-w-sm mx-auto mb-8 text-left">
+                        <p class="text-xs font-bold text-blue-600 uppercase mb-1">Username</p><p class="text-xl font-mono font-bold text-gray-900 mb-4" id="credUsername">--</p>
+                        <p class="text-xs font-bold text-blue-600 uppercase mb-1">Password</p><p class="text-xl font-mono font-bold text-gray-900" id="credPassword">--</p>
                         <p class="text-xs text-gray-400 mt-4 font-mono">App ID: <span id="credAppId"></span></p>
                     </div>
-                    
                     <div class="flex gap-4 justify-center">
                         <button onclick="downloadReceipt('Admission Fee', 12500)" class="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50">Download Receipt</button>
                         <button onclick="showLoginScreen()" class="px-6 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg">Login to ERP</button>
@@ -164,26 +130,13 @@
         <div id="loginFlow" class="hidden min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 p-4">
             <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 fade-in">
                 <div class="bg-ppsuDark p-8 text-center">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-graduation-cap text-3xl text-ppsuRed"></i></div>
                     <h2 class="text-2xl font-bold text-white">Student ERP Login</h2>
-                    <p class="text-gray-400 text-sm mt-1">Access your academic dashboard</p>
+                    <p class="text-gray-400 text-sm mt-1">Access your dashboard</p>
                 </div>
                 <div class="p-8 pt-10">
                     <form onsubmit="handleLogin(event)" class="space-y-6">
-                        <div>
-                            <label class="erp-label">Mobile Number</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-3 text-gray-400"><i class="fa-solid fa-phone"></i></span>
-                                <input type="tel" id="loginMobile" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ppsuRed outline-none" placeholder="10-digit Mobile">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="erp-label">Password</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ppsuRed outline-none" placeholder="DOB (YYYY-MM-DD)">
-                            </div>
-                        </div>
+                        <div><label class="erp-label">Mobile Number</label><input type="tel" id="loginMobile" required class="erp-input" placeholder="10-digit Mobile"></div>
+                        <div><label class="erp-label">Password</label><input type="password" id="loginPass" required class="erp-input" placeholder="DOB (YYYY-MM-DD)"></div>
                         <button type="submit" id="loginBtn" class="w-full py-4 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 shadow-md transition">Secure Login</button>
                     </form>
                 </div>
@@ -196,19 +149,12 @@
             <div class="h-20 flex items-center gap-3 px-6 bg-black/20 border-b border-white/10">
                 <i class="fa-solid fa-layer-group text-ppsuRed text-xl"></i><span class="font-bold text-lg tracking-wide">PPSU ERP</span>
             </div>
-            
             <div class="p-6 border-b border-white/10 bg-white/5">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-ppsuRed to-orange-500 flex items-center justify-center font-bold text-xl shadow-lg">
-                        <span id="sidebarInitials">S</span>
-                    </div>
-                    <div class="overflow-hidden">
-                        <p id="sidebarName" class="font-bold text-sm truncate">Student Name</p>
-                        <p id="sidebarAppId" class="text-xs text-gray-400 font-mono">APP0000</p>
-                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-ppsuRed to-orange-500 flex items-center justify-center font-bold text-xl shadow-lg"><span id="sidebarInitials">S</span></div>
+                    <div class="overflow-hidden"><p id="sidebarName" class="font-bold text-sm truncate">Student</p><p id="sidebarAppId" class="text-xs text-gray-400 font-mono">APP0000</p></div>
                 </div>
             </div>
-
             <nav class="flex-1 py-6 px-3 overflow-y-auto">
                 <div onclick="switchTab('home')" id="nav-home" class="sidebar-link active"><i class="fa-solid fa-chart-pie w-5 mr-3"></i> Dashboard</div>
                 <div onclick="switchTab('app')" id="nav-app" class="sidebar-link"><i class="fa-solid fa-file-contract w-5 mr-3"></i> My Application</div>
@@ -218,22 +164,13 @@
                 <div onclick="switchTab('fees')" id="nav-fees" class="sidebar-link"><i class="fa-solid fa-indian-rupee-sign w-5 mr-3"></i> Fee Structure</div>
                 <div onclick="switchTab('receipts')" id="nav-receipts" class="sidebar-link"><i class="fa-solid fa-clock-rotate-left w-5 mr-3"></i> Payment History</div>
             </nav>
-
-            <div class="p-4 border-t border-white/10">
-                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-red-600/90 hover:bg-red-600 transition text-sm font-bold shadow-lg">
-                    <i class="fa-solid fa-power-off"></i> Logout
-                </button>
-            </div>
+            <div class="p-4 border-t border-white/10"><button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-red-600/90 hover:bg-red-600 transition text-sm font-bold shadow-lg"><i class="fa-solid fa-power-off"></i> Logout</button></div>
         </aside>
 
         <div class="flex-1 flex flex-col h-full overflow-hidden relative">
             <header class="bg-white shadow-sm h-20 flex items-center justify-between px-8 z-10 border-b border-gray-200">
                 <h1 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-                <div class="flex items-center gap-4">
-                    <span id="globalStatusBadge" class="px-4 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
-                        <i class="fa-solid fa-circle-check mr-1"></i> Admission Confirmed
-                    </span>
-                </div>
+                <span class="px-4 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200"><i class="fa-solid fa-circle-check mr-1"></i> Admission Confirmed</span>
             </header>
 
             <div class="flex-1 overflow-y-auto p-8 bg-gray-50" id="dashContentArea">
@@ -242,27 +179,13 @@
                     <div class="bg-gradient-to-r from-gray-800 to-ppsuDark rounded-2xl p-8 text-white shadow-lg mb-8 relative overflow-hidden">
                         <div class="absolute right-0 top-0 h-full w-1/3 bg-white/5 skew-x-12 transform translate-x-12"></div>
                         <h2 class="text-3xl font-bold mb-2">Welcome, <span id="dashNameHome" class="text-ppsuRed">Student</span>!</h2>
-                        <p class="text-gray-400 max-w-xl">Your academic journey starts here. Complete your application steps below.</p>
-                        <button onclick="switchTab('app')" class="mt-6 px-6 py-2 bg-ppsuRed text-white rounded-lg font-bold text-sm hover:bg-red-600 transition shadow-lg">Complete Application</button>
+                        <p class="text-gray-400 max-w-xl">Your academic journey starts here.</p>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Application Status</p>
-                            <p class="text-xl font-bold text-yellow-600" id="dashAppStatus">Pending</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Hostel</p>
-                            <p class="text-xl font-bold text-gray-800" id="dashHostelStatus">Not Booked</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Admission Fee</p>
-                            <p class="text-xl font-bold text-green-600">Paid (₹12,500)</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Course</p>
-                            <p class="text-lg font-bold text-gray-800 truncate" id="dashCourseHome">--</p>
-                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"><p class="text-xs font-bold text-gray-400 uppercase mb-2">Application Status</p><p class="text-xl font-bold text-yellow-600" id="dashAppStatus">Pending</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"><p class="text-xs font-bold text-gray-400 uppercase mb-2">Hostel Status</p><p class="text-xl font-bold text-gray-800" id="dashHostelStatus">Not Booked</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"><p class="text-xs font-bold text-gray-400 uppercase mb-2">Admission Fee</p><p class="text-xl font-bold text-green-600">Paid (₹12,500)</p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"><p class="text-xs font-bold text-gray-400 uppercase mb-2">Course</p><p class="text-lg font-bold text-gray-800 truncate" id="dashCourseHome">--</p></div>
                     </div>
                 </div>
 
@@ -270,156 +193,99 @@
                     <form onsubmit="handleApplicationSubmit(event)" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="p-8 border-b border-gray-100">
                             <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="fa-solid fa-user-pen text-ppsuRed"></i> Personal Details</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div><label class="erp-label">Full Name</label><input type="text" id="appFullName" readonly class="erp-input bg-gray-100 cursor-not-allowed"></div>
-                                <div><label class="erp-label">Mobile</label><input type="text" id="appMobile" readonly class="erp-input bg-gray-100 cursor-not-allowed"></div>
-                                <div><label class="erp-label">Aadhaar</label><input type="text" id="appAadhaar" readonly class="erp-input bg-gray-100 cursor-not-allowed"></div>
-                                <div><label class="erp-label">Course</label><input type="text" id="appCourse" readonly class="erp-input bg-gray-100 cursor-not-allowed"></div>
-                                
-                                <div class="md:col-span-2"><label class="erp-label">Email Address</label><input type="email" id="appEmail" required class="erp-input"></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                                <div><label class="erp-label">Full Name</label><div id="appFullName" class="read-only-field">--</div></div>
+                                <div><label class="erp-label">Mobile</label><div id="appMobile" class="read-only-field">--</div></div>
+                                <div><label class="erp-label">Aadhaar</label><div id="appAadhaar" class="read-only-field">--</div></div>
+                                <div><label class="erp-label">Course</label><div id="appCourse" class="read-only-field">--</div></div>
+                                <div class="md:col-span-2 border-t pt-6"><label class="erp-label">Email Address</label><input type="email" id="appEmail" required class="erp-input"></div>
                                 <div class="md:col-span-2"><label class="erp-label">Residential Address</label><input type="text" id="appAddress" required class="erp-input"></div>
                                 <div><label class="erp-label">City</label><input type="text" id="appCity" required class="erp-input"></div>
                                 <div><label class="erp-label">State</label><input type="text" id="appState" required class="erp-input"></div>
                                 <div><label class="erp-label">Pincode</label><input type="text" id="appPincode" required class="erp-input"></div>
                             </div>
                         </div>
-                        <div class="p-6 bg-gray-50 text-right">
-                            <button type="submit" id="submitAppBtn" class="px-8 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg transition">Save & Pay App Fee (₹1,200)</button>
-                        </div>
+                        <div class="p-6 bg-gray-50 text-right"><button type="submit" id="submitAppBtn" class="px-8 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg transition">Save & Pay App Fee (₹1,200)</button></div>
                     </form>
                 </div>
 
                 <div id="view-certs" class="hidden fade-in max-w-6xl mx-auto">
-                    <div class="flex items-center gap-2 mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-                        <i class="fa-solid fa-triangle-exclamation text-yellow-600"></i> Maximum file size allowed is 10 MB per document.
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">10th Marksheet</h4>
-                            <div class="preview-container"><img id="preview10th" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
-                            <input type="file" id="file10th" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('file10th', 'preview10th')">
-                            <button onclick="uploadCert('10th Marksheet', 'btn10th')" id="btn10th" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <h4 class="font-bold text-gray-800 mb-4">Passport Size Photo</h4>
+                            <div class="preview-container"><img id="previewPhoto" class="preview-img"><i class="fa-solid fa-user-circle text-4xl text-gray-300"></i></div>
+                            <input type="file" id="filePhoto" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('filePhoto', 'previewPhoto')">
+                            <button onclick="uploadCert('Passport Photo', 'btnPhoto')" id="btnPhoto" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">12th Marksheet</h4>
-                            <div class="preview-container"><img id="preview12th" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
-                            <input type="file" id="file12th" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('file12th', 'preview12th')">
-                            <button onclick="uploadCert('12th Marksheet', 'btn12th')" id="btn12th" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center">
+                            <h4 class="font-bold text-gray-800 mb-4">Student Signature</h4>
+                            <div class="preview-container"><img id="previewSign" class="preview-img"><i class="fa-solid fa-pen-nib text-4xl text-gray-300"></i></div>
+                            <input type="file" id="fileSign" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('fileSign', 'previewSign')">
+                            <button onclick="uploadCert('Student Signature', 'btnSign')" id="btnSign" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button>
                         </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">Transfer Certificate (TC)</h4>
-                            <div class="preview-container"><img id="previewTC" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
-                            <input type="file" id="fileTC" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('fileTC', 'previewTC')">
-                            <button onclick="uploadCert('TC', 'btnTC')" id="btnTC" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">Student Aadhaar</h4>
-                            <div class="preview-container"><img id="previewAadhaar" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
-                            <input type="file" id="fileAadhaar" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('fileAadhaar', 'previewAadhaar')">
-                            <button onclick="uploadCert('Student Aadhaar', 'btnAadhaar')" id="btnAadhaar" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">Father's Aadhaar</h4>
-                            <div class="preview-container"><img id="previewFather" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
-                            <input type="file" id="fileFather" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('fileFather', 'previewFather')">
-                            <button onclick="uploadCert('Father Aadhaar', 'btnFather')" id="btnFather" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
-                            <h4 class="font-bold text-gray-800 mb-4">Mother's Aadhaar</h4>
-                            <div class="preview-container"><img id="previewMother" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
-                            <input type="file" id="fileMother" class="block w-full text-xs text-slate-500 mb-4" onchange="previewFile('fileMother', 'previewMother')">
-                            <button onclick="uploadCert('Mother Aadhaar', 'btnMother')" id="btnMother" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
-                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">10th Marksheet</h4><input type="file" id="file10th" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('10th Marksheet', 'btn10th')" id="btn10th" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">12th Marksheet</h4><input type="file" id="file12th" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('12th Marksheet', 'btn12th')" id="btn12th" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">TC</h4><input type="file" id="fileTC" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('TC', 'btnTC')" id="btnTC" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">Student Aadhaar</h4><input type="file" id="fileAadhaar" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('Student Aadhaar', 'btnAadhaar')" id="btnAadhaar" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">Father Aadhaar</h4><input type="file" id="fileFather" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('Father Aadhaar', 'btnFather')" id="btnFather" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center"><h4 class="font-bold text-gray-800 mb-4">Mother Aadhaar</h4><input type="file" id="fileMother" class="block w-full text-xs text-slate-500 mb-4"><button onclick="uploadCert('Mother Aadhaar', 'btnMother')" id="btnMother" class="w-full py-2 bg-black text-white rounded text-sm font-bold">Upload</button></div>
                     </div>
                 </div>
 
                 <div id="view-hostel" class="hidden fade-in max-w-6xl mx-auto">
                     <div id="hostelSelectionView">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div onclick="selectHostel('Non-AC 4 Sharing', 75000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition group">
-                                <div class="h-40 bg-gray-100 rounded-xl mb-6 flex items-center justify-center group-hover:bg-red-50 transition"><i class="fa-solid fa-users text-5xl text-gray-400 group-hover:text-ppsuRed"></i></div>
-                                <h3 class="text-xl font-bold text-gray-900">Non-AC Room</h3>
-                                <p class="text-sm text-gray-500 mb-4">4 Students Sharing</p>
-                                <div class="text-2xl font-bold text-ppsuRed">₹75,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
-                                <button class="mt-6 w-full py-2 border border-ppsuRed text-ppsuRed font-bold rounded-lg group-hover:bg-ppsuRed group-hover:text-white transition">Select</button>
-                            </div>
-                            
-                            <div onclick="selectHostel('AC 3 Sharing', 110000)" class="bg-white rounded-2xl border-2 border-ppsuRed p-8 cursor-pointer hover:shadow-xl transition relative transform hover:-translate-y-2">
-                                <div class="absolute top-0 right-0 bg-ppsuRed text-white text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
-                                <div class="h-40 bg-blue-50 rounded-xl mb-6 flex items-center justify-center"><i class="fa-solid fa-snowflake text-5xl text-blue-400"></i></div>
-                                <h3 class="text-xl font-bold text-gray-900">AC Room</h3>
-                                <p class="text-sm text-gray-500 mb-4">3 Students Sharing</p>
-                                <div class="text-2xl font-bold text-ppsuRed">₹1,10,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
-                                <button class="mt-6 w-full py-2 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 transition">Select</button>
-                            </div>
-
-                            <div onclick="selectHostel('AC 2 Sharing', 140000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition group">
-                                <div class="h-40 bg-gray-100 rounded-xl mb-6 flex items-center justify-center group-hover:bg-red-50 transition"><i class="fa-solid fa-user-group text-5xl text-gray-400 group-hover:text-ppsuRed"></i></div>
-                                <h3 class="text-xl font-bold text-gray-900">Premium AC</h3>
-                                <p class="text-sm text-gray-500 mb-4">2 Students Sharing</p>
-                                <div class="text-2xl font-bold text-ppsuRed">₹1,40,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
-                                <button class="mt-6 w-full py-2 border border-ppsuRed text-ppsuRed font-bold rounded-lg group-hover:bg-ppsuRed group-hover:text-white transition">Select</button>
-                            </div>
+                            <div onclick="selectHostel('Non-AC', 75000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition"><h3 class="text-xl font-bold">Non-AC</h3><p class="text-2xl font-bold text-ppsuRed">₹75,000</p></div>
+                            <div onclick="selectHostel('AC 3 Share', 110000)" class="bg-white rounded-2xl border-2 border-ppsuRed p-8 cursor-pointer hover:shadow-xl transition"><h3 class="text-xl font-bold">AC (3 Share)</h3><p class="text-2xl font-bold text-ppsuRed">₹1,10,000</p></div>
+                            <div onclick="selectHostel('AC 2 Share', 140000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition"><h3 class="text-xl font-bold">AC (2 Share)</h3><p class="text-2xl font-bold text-ppsuRed">₹1,40,000</p></div>
                         </div>
                     </div>
-
                     <div id="hostelPaymentView" class="hidden bg-white max-w-lg mx-auto rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">Confirm Booking</h3>
-                        <p class="text-gray-500 mb-8">You are booking <span id="selectedHostelType" class="font-bold text-black">--</span></p>
-                        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-8 border">
-                            <span class="font-medium text-gray-600">Total Fee</span>
-                            <span class="text-2xl font-bold text-ppsuRed" id="selectedHostelFee">--</span>
-                        </div>
-                        <button onclick="payHostelFee()" class="w-full py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg transition">Pay & Book Room</button>
-                        <button onclick="document.getElementById('hostelPaymentView').classList.add('hidden'); document.getElementById('hostelSelectionView').classList.remove('hidden');" class="mt-4 text-gray-400 text-sm hover:text-gray-600 underline">Cancel</button>
+                        <p class="text-gray-500 mb-8">Booking <span id="selectedHostelType" class="font-bold text-black">--</span></p>
+                        <button onclick="payHostelFee()" class="w-full py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg transition">Pay & Get Room</button>
                     </div>
                 </div>
 
                 <div id="view-idcard" class="hidden fade-in flex justify-center py-8">
-                    <div class="w-[320px] h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden relative border border-gray-200 flex flex-col transform hover:scale-105 transition duration-500">
-                        <div class="bg-ppsuDark h-28 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                            <div class="absolute inset-0 bg-red-600/20"></div>
+                    <div class="w-[320px] h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden relative border border-gray-200 flex flex-col transform hover:scale-105 transition duration-500">
+                        <div class="bg-ppsuDark h-28 flex flex-col items-center justify-center text-white relative">
                             <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" class="h-10 bg-white p-1 rounded mb-2 relative z-10">
                             <p class="text-[10px] font-bold tracking-[0.2em] relative z-10">P P SAVANI UNIVERSITY</p>
                         </div>
-                        <div class="bg-ppsuRed text-white text-center py-1.5 font-bold text-xs uppercase tracking-wider shadow-md relative z-20" id="idCardCourseDisplay">--</div>
-                        <div class="flex justify-center -mt-10 relative z-30">
-                            <div class="w-24 h-24 bg-gray-200 border-4 border-white rounded-xl shadow-lg flex items-center justify-center text-gray-400">
-                                <i class="fa-solid fa-user text-4xl"></i>
+                        <div class="bg-ppsuRed text-white text-center py-1.5 font-bold text-xs uppercase tracking-wider" id="idCardCourseDisplay">--</div>
+                        <div class="flex justify-center -mt-12 relative z-30">
+                            <div class="w-32 h-32 bg-gray-200 border-4 border-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
+                                <img id="idCardPhoto" src="" class="w-full h-full object-cover hidden">
+                                <i id="idCardPlaceholder" class="fa-solid fa-user text-5xl text-gray-400"></i>
                             </div>
                         </div>
                         <div class="text-center mt-4 px-6 flex-grow">
-                            <h2 id="idCardName" class="text-lg font-bold text-gray-900 uppercase leading-tight">Student Name</h2>
+                            <h2 id="idCardName" class="text-lg font-bold text-gray-900 uppercase leading-tight">Student</h2>
                             <p class="text-xs text-gray-500 mt-1 font-mono bg-gray-100 inline-block px-2 py-0.5 rounded" id="idCardNo">ID: --</p>
                             <div class="mt-6 space-y-2 text-left text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
                                 <div class="flex justify-between"><span class="text-gray-500">DOB</span><span class="font-bold" id="idCardDob">--</span></div>
                                 <div class="flex justify-between"><span class="text-gray-500">Validity</span><span class="font-bold text-green-600">2026 - 2030</span></div>
                             </div>
                         </div>
-                        <div class="p-4 pt-0 text-center">
-                            <div class="h-8 bg-black w-3/4 mx-auto mb-2 opacity-80" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, black 2px, black 4px);"></div>
-                            <p class="text-[8px] text-gray-400 uppercase">Property of PPSU • Non-Transferable</p>
-                        </div>
+                        <div class="p-4 pt-0 text-center"><div class="h-8 bg-black w-3/4 mx-auto mb-2 opacity-80"></div><p class="text-[8px] text-gray-400 uppercase">Non-Transferable</p></div>
                     </div>
                 </div>
 
                 <div id="view-fees" class="hidden fade-in max-w-4xl mx-auto">
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="bg-gray-50 p-6 border-b border-gray-200 flex justify-between items-center">
-                            <h3 class="font-bold text-lg text-gray-800">Fee Structure (2026-27)</h3>
-                            <button onclick="downloadFeeStructure()" class="text-sm text-ppsuRed font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-download"></i> PDF</button>
-                        </div>
                         <table class="w-full text-left text-sm" id="feeTable">
-                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-bold">
-                                <tr><th class="p-4">Semester</th><th class="p-4">Tuition Fee</th><th class="p-4">Exam Fee</th><th class="p-4">Total</th></tr>
-                            </thead>
+                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-bold"><tr><th class="p-4">Semester</th><th class="p-4">Total</th></tr></thead>
                             <tbody class="divide-y text-gray-700">
-                                <tr><td class="p-4 font-medium">Semester 1</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
-                                <tr><td class="p-4 font-medium">Semester 2</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
-                                <tr><td class="p-4 font-medium">Semester 3</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
-                                <tr><td class="p-4 font-medium">Semester 4</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
-                                <tr class="bg-gray-50 font-bold text-gray-900"><td class="p-4" colspan="3">Grand Total (4 Years)</td><td class="p-4 text-ppsuRed text-lg">₹3,80,000</td></tr>
+                                <tr><td class="p-4">Semester 1</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 2</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 3</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 4</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 5</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 6</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 7</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4">Semester 8</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr class="bg-gray-50 font-bold text-gray-900"><td class="p-4">Grand Total</td><td class="p-4 text-ppsuRed text-lg">₹3,80,000</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -428,349 +294,166 @@
                 <div id="view-receipts" class="hidden fade-in max-w-4xl mx-auto">
                     <h3 class="font-bold text-lg text-gray-800 mb-6">Payment History</h3>
                     <div class="space-y-4">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-                                <div><p class="font-bold text-gray-800">Admission Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate1">--</span></p></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-gray-900 mb-1">₹12,500</p>
-                                <button onclick="downloadReceipt('Admission Fee', 12500)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
-                            </div>
-                        </div>
-
-                        <div id="appFeeReceiptRow" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-file-invoice"></i></div>
-                                <div><p class="font-bold text-gray-800">Application Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate2">--</span></p></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-gray-900 mb-1">₹1,200</p>
-                                <button onclick="downloadReceipt('Application Fee', 1200)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
-                            </div>
-                        </div>
-
-                        <div id="hostelFeeReceiptRow" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-bed"></i></div>
-                                <div><p class="font-bold text-gray-800">Hostel Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate3">--</span></p></div>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-gray-900 mb-1" id="hostelReceiptAmt">--</p>
-                                <button onclick="downloadReceipt('Hostel Fee', hostelBooking.fee)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
-                            </div>
-                        </div>
+                        <div class="bg-white p-5 rounded-xl border flex justify-between"><div><p class="font-bold">Admission Fee</p><span id="receiptDate1" class="text-xs text-gray-500">--</span></div><div class="text-right"><p class="font-bold">₹12,500</p><button onclick="downloadReceipt('Admission Fee', 12500)" class="text-xs text-blue-600 underline">Download</button></div></div>
+                        <div id="appFeeReceiptRow" class="hidden bg-white p-5 rounded-xl border flex justify-between"><div><p class="font-bold">App Fee</p><span id="receiptDate2" class="text-xs text-gray-500">--</span></div><div class="text-right"><p class="font-bold">₹1,200</p><button onclick="downloadReceipt('App Fee', 1200)" class="text-xs text-blue-600 underline">Download</button></div></div>
+                        <div id="hostelFeeReceiptRow" class="hidden bg-white p-5 rounded-xl border flex justify-between"><div><p class="font-bold">Hostel Fee</p><span id="receiptDate3" class="text-xs text-gray-500">--</span></div><div class="text-right"><p class="font-bold" id="hostelReceiptAmt">--</p><button onclick="downloadReceipt('Hostel Fee', hostelBooking.fee)" class="text-xs text-blue-600 underline">Download</button></div></div>
                     </div>
                 </div>
-
             </div> 
         </div>
     </div>
 
-    <div id="appPayModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[200] backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-sm w-full mx-4 transform scale-100 transition-transform">
-            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-wallet text-2xl text-blue-600"></i></div>
-            <h3 class="text-xl font-bold text-gray-900">Application Fee</h3>
-            <p class="text-sm text-gray-500 mb-6">One-time non-refundable processing charge.</p>
-            <div class="bg-gray-50 p-4 rounded-xl mb-6">
-                <p class="text-3xl text-ppsuRed font-bold">₹1,200</p>
-            </div>
-            <button onclick="confirmAppPayment()" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-lg">Pay Securely</button>
-            <button onclick="document.getElementById('appPayModal').classList.add('hidden')" class="mt-4 text-sm text-gray-400 hover:text-gray-600">Cancel</button>
+    <div id="appPayModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[200] backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold">Application Fee</h3>
+            <p class="text-3xl text-ppsuRed my-4 font-bold">₹1,200</p>
+            <button onclick="confirmAppPayment()" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg">Pay Securely</button>
         </div>
     </div>
 
     <script>
-        // GLOBAL STATE
         let currentUser = null;
         let hostelBooking = { status: 'none', fee: 0 };
+        // Temporary storage for photo URL during session (in real app, fetch from backend)
+        let tempPhotoUrl = ""; 
         const API = "https://ppsu-backend.onrender.com/api";
 
-        // UTILS
         const getEl = (id) => document.getElementById(id);
         const show = (id) => getEl(id).classList.remove('hidden');
         const hide = (id) => getEl(id).classList.add('hidden');
 
-        // NAVIGATION
         function showHome() { hide('registrationFlow'); hide('loginFlow'); hide('dashboardFlow'); show('homeFlow'); getEl('publicHeader').classList.remove('hidden'); }
         function showRegistration() { hide('homeFlow'); hide('loginFlow'); show('registrationFlow'); }
         function showLoginScreen() { hide('homeFlow'); hide('registrationFlow'); show('loginFlow'); }
-        
-        function switchTab(tabName) {
-            ['home','app','hostel','certs','idcard','fees','receipts'].forEach(t => hide('view-'+t));
+        function switchTab(t) { 
+            ['home','app','hostel','certs','idcard','fees','receipts'].forEach(x => hide('view-'+x)); 
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-            show('view-'+tabName);
-            getEl('nav-'+tabName).classList.add('active');
-            const titles = { home:'Dashboard Overview', app:'My Application', hostel:'Hostel Booking', certs:'Document Uploads', idcard:'Digital ID Card', fees:'Fee Structure', receipts:'Payment Receipts'};
-            getEl('pageTitle').innerText = titles[tabName];
+            show('view-'+t); getEl('nav-'+t).classList.add('active');
+            if(t==='idcard' && tempPhotoUrl) { getEl('idCardPhoto').src = tempPhotoUrl; getEl('idCardPhoto').style.display='block'; getEl('idCardPlaceholder').style.display='none'; }
         }
 
-        // MOBILE VERIFICATION SIMULATION
+        // MOBILE OTP
         function verifyMobile() {
-            const mobile = getEl('mobile').value;
-            if(mobile.length !== 10) return alert("Please enter valid 10 digit mobile");
-            const btn = getEl('verifyBtn');
-            btn.innerText = "Sending...";
-            setTimeout(() => {
-                let otp = prompt("OTP sent to " + mobile + ". Enter OTP (Demo: 1234)");
-                if(otp === "1234") {
-                    getEl('verifiedBadge').classList.remove('hidden');
-                    btn.classList.add('hidden');
-                    getEl('mobile').readOnly = true;
-                } else {
-                    alert("Invalid OTP");
-                    btn.innerText = "Send OTP";
-                }
+            if(getEl('mobile').value.length!==10) return alert("Invalid Mobile");
+            const btn = getEl('verifyBtn'); btn.innerText = "Sending...";
+            setTimeout(() => { 
+                let otp = prompt("Enter OTP sent to mobile (Demo: 1234)");
+                if(otp==="1234") { getEl('verifiedBadge').classList.remove('hidden'); btn.classList.add('hidden'); }
+                else { alert("Invalid OTP"); btn.innerText = "Send OTP"; }
             }, 1000);
         }
 
-        // 1. REGISTRATION
+        // 1. REGISTER
         async function handleRegistration(e) {
             e.preventDefault();
-            if(getEl('verifiedBadge').classList.contains('hidden')) return alert("Please verify mobile number first");
-
+            if(getEl('verifiedBadge').classList.contains('hidden')) return alert("Verify Mobile First");
             const data = {
-                fullName: getEl('fullName').value,
-                aadhaar: getEl('aadhaar').value,
-                dob: getEl('dob').value,
-                course: getEl('course').value,
-                mobile: getEl('mobile').value,
-                referral: getEl('referral').value,
+                fullName: getEl('fullName').value, aadhaar: getEl('aadhaar').value, dob: getEl('dob').value,
+                course: getEl('course').value, mobile: getEl('mobile').value, referral: getEl('referral').value,
                 applicationId: '2026' + Math.floor(100000 + Math.random() * 900000)
             };
-
-            const btn = e.target.querySelector('button');
-            btn.innerHTML = '<div class="loader w-5 h-5 mx-auto"></div>'; btn.disabled = true;
-
             try {
-                const res = await fetch(`${API}/register`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(data) 
-                });
+                const res = await fetch(`${API}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
                 if(res.ok) {
                     currentUser = data; 
-                    getEl('summaryName').innerText = data.fullName;
                     getEl('summaryCourse').innerText = data.course;
                     hide('step1-content'); show('step2-content'); 
-                    getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300";
-                    getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
-                    getEl('regStepNum').innerText = "2";
-                } else {
-                    const err = await res.json();
-                    alert("Registration Failed: " + err.error);
-                }
+                    getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300"; getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
+                } else alert("Registration Failed");
             } catch(e) { alert("Server Error"); }
-            finally { btn.innerText = "Proceed to Payment"; btn.disabled = false; }
         }
 
-        // 2. ADMISSION PAYMENT
+        // 2. ADM FEE
         async function processAdmissionPayment() {
             show('paymentLoader');
-            await fetch(`${API}/update-application`, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ applicationId: currentUser.applicationId, regFeeStatus: "Paid" }) 
-            });
+            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, regFeeStatus: "Paid" }) });
             setTimeout(() => {
                 hide('paymentLoader'); hide('step2-content'); show('step3-content');
-                getEl('credUsername').innerText = currentUser.mobile;
-                getEl('credPassword').innerText = currentUser.dob;
-                getEl('credAppId').innerText = currentUser.applicationId;
-                getEl('step2-dot').className = "w-3 h-3 rounded-full bg-gray-300";
-                getEl('step3-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
-                getEl('regStepNum').innerText = "3";
+                getEl('credUsername').innerText = currentUser.mobile; getEl('credPassword').innerText = currentUser.dob; getEl('credAppId').innerText = currentUser.applicationId;
             }, 2000);
         }
 
         // 3. LOGIN
         async function handleLogin(e) {
             e.preventDefault();
-            const btn = getEl('loginBtn'); btn.innerHTML = '<div class="loader w-5 h-5 mx-auto"></div>';
-            const mobile = getEl('loginMobile').value;
-            const dob = getEl('loginPass').value;
-
+            const btn = getEl('loginBtn'); btn.innerText = "Verifying...";
             try {
-                const res = await fetch(`${API}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({mobile, dob}) });
+                const res = await fetch(`${API}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({mobile: getEl('loginMobile').value, dob: getEl('loginPass').value}) });
                 const data = await res.json();
                 if(res.ok) {
                     currentUser = data.student;
                     initDashboard(currentUser);
-                    hide('loginFlow'); show('dashboardFlow');
-                    getEl('publicHeader').classList.add('hidden');
-                } else {
-                    alert(data.error);
-                }
-            } catch(e) { alert("Login connection failed"); }
+                    hide('loginFlow'); show('dashboardFlow'); getEl('publicHeader').classList.add('hidden');
+                } else alert(data.error);
+            } catch(e) { alert("Error logging in"); }
             finally { btn.innerText = "Secure Login"; }
         }
 
         function initDashboard(user) {
-            getEl('sidebarName').innerText = user.fullName;
-            getEl('sidebarAppId').innerText = user.applicationId;
-            getEl('sidebarInitials').innerText = user.fullName.charAt(0);
+            getEl('sidebarName').innerText = user.fullName; getEl('sidebarAppId').innerText = user.applicationId; getEl('sidebarInitials').innerText = user.fullName.charAt(0);
+            getEl('dashNameHome').innerText = user.fullName.split(' ')[0]; getEl('dashCourseHome').innerText = user.course;
             
-            getEl('dashNameHome').innerText = user.fullName.split(' ')[0];
-            getEl('dashCourseHome').innerText = user.course;
+            // App Form
+            getEl('appFullName').innerText = user.fullName; getEl('appMobile').innerText = user.mobile; getEl('appAadhaar').innerText = user.aadhaar; getEl('appCourse').innerText = user.course;
             
-            getEl('idCardName').innerText = user.fullName;
-            getEl('idCardNo').innerText = "ID: " + user.applicationId;
-            getEl('idCardCourseDisplay').innerText = user.course;
-            getEl('idCardDob').innerText = user.dob;
-
-            getEl('appFullName').value = user.fullName;
-            getEl('appMobile').value = user.mobile;
-            getEl('appAadhaar').value = user.aadhaar;
-            getEl('appCourse').value = user.course;
-            getEl('appEmail').value = user.email || "";
-            getEl('appAddress').value = user.address || "";
-            getEl('appCity').value = user.city || "";
-            getEl('appState').value = user.state || "";
-            getEl('appPincode').value = user.pincode || "";
-            
+            // ID Card Data
+            getEl('idCardName').innerText = user.fullName; getEl('idCardNo').innerText = "ID: " + user.applicationId; getEl('idCardCourseDisplay').innerText = user.course; getEl('idCardDob').innerText = user.dob;
             getEl('receiptDate1').innerText = user.date;
 
             if(user.appFeeStatus === "Paid") {
-                getEl('submitAppBtn').innerText = "Details Saved & Fee Paid";
-                getEl('submitAppBtn').className = "px-8 py-3 bg-green-600 text-white font-bold rounded-lg cursor-not-allowed opacity-80";
-                getEl('submitAppBtn').disabled = true;
-                
-                getEl('dashAppStatus').innerText = "Submitted";
-                getEl('dashAppStatus').className = "text-xl font-bold text-green-600";
-                
-                show('appFeeReceiptRow');
-                getEl('receiptDate2').innerText = new Date().toLocaleDateString();
+                getEl('submitAppBtn').innerText = "Submitted & Paid"; getEl('submitAppBtn').disabled = true; getEl('submitAppBtn').classList.add('opacity-50');
+                getEl('dashAppStatus').innerText = "Submitted"; getEl('dashAppStatus').className = "text-xl font-bold text-green-600";
+                show('appFeeReceiptRow'); getEl('receiptDate2').innerText = new Date().toLocaleDateString();
             }
         }
 
-        function logout() { location.reload(); }
-
-        // 4. APP FEE LOGIC
+        // 4. APP FEE
         async function handleApplicationSubmit(e) {
             e.preventDefault();
-            const updateData = {
-                applicationId: currentUser.applicationId,
-                email: getEl('appEmail').value, address: getEl('appAddress').value,
-                city: getEl('appCity').value, state: getEl('appState').value, pincode: getEl('appPincode').value
-            };
-            
-            const btn = getEl('submitAppBtn'); btn.innerText = "Saving...";
+            const updateData = { applicationId: currentUser.applicationId, email: getEl('appEmail').value, address: getEl('appAddress').value, city: getEl('appCity').value, state: getEl('appState').value, pincode: getEl('appPincode').value };
             await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(updateData) });
             show('appPayModal');
-            btn.innerText = "Save & Pay App Fee (₹1,200)";
         }
-
         async function confirmAppPayment() {
             hide('appPayModal');
-            await fetch(`${API}/update-application`, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ applicationId: currentUser.applicationId, appFeeStatus: "Paid" }) 
-            });
-            alert("Application Fee Paid Successfully!");
-            currentUser.appFeeStatus = "Paid";
-            initDashboard(currentUser); 
+            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ applicationId: currentUser.applicationId, appFeeStatus: "Paid" }) });
+            alert("Paid Successfully!"); currentUser.appFeeStatus = "Paid"; initDashboard(currentUser);
         }
 
-        // 5. DOCUMENT UPLOAD
-        function previewFile(inputId, imgId) {
-            const file = getEl(inputId).files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = getEl(imgId);
-                    img.src = e.target.result;
-                    img.style.display = "block";
-                    img.nextElementSibling.style.display = "none"; 
-                }
-                reader.readAsDataURL(file);
-            }
+        // 5. UPLOADS (PHOTO LOGIC)
+        function previewFile(inp, img) {
+            const f = getEl(inp).files[0];
+            if(f) { const r = new FileReader(); r.onload = e => { getEl(img).src=e.target.result; getEl(img).style.display='block'; if(inp==='filePhoto') tempPhotoUrl=e.target.result; }; r.readAsDataURL(f); }
         }
-
-        async function uploadCert(docType, btnId) {
-            if(!currentUser) return alert("Session expired. Please login again.");
-            const fileInput = getEl(btnId.replace('btn', 'file'));
-            if(!fileInput.files[0]) return alert("Please select a file first.");
-
-            const btn = getEl(btnId); 
-            const originalText = btn.innerText;
-            btn.innerText = "Uploading..."; btn.disabled = true;
-
-            const fd = new FormData();
-            fd.append("file", fileInput.files[0]);
-            fd.append("studentName", currentUser.fullName);
-            fd.append("docType", docType);
-
+        async function uploadCert(type, btnId) {
+            if(!currentUser) return alert("Session Expired");
+            const f = getEl(btnId.replace('btn','file')).files[0];
+            if(!f) return alert("Select File");
+            const btn = getEl(btnId); btn.innerText = "...";
+            const fd = new FormData(); fd.append("file", f); fd.append("studentName", currentUser.fullName); fd.append("docType", type);
             try {
                 const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
-                if(res.ok) { 
-                    alert(`${docType} uploaded successfully!`); 
-                    btn.innerText = "Done ✓"; 
-                    btn.className = "w-full py-2 bg-green-600 text-white rounded text-sm font-bold";
-                } else {
-                    alert("Upload Failed. Check connection.");
-                    btn.innerText = originalText; btn.disabled = false;
-                }
-            } catch(e) { 
-                console.error(e);
-                alert("Network Error"); 
-                btn.innerText = originalText; btn.disabled = false;
-            }
+                if(res.ok) { alert("Uploaded"); btn.innerText = "Done"; }
+                else alert("Failed");
+            } catch(e) { alert("Error"); }
         }
 
-        // 6. HOSTEL
-        function selectHostel(type, fee) {
-            hostelBooking = { type, fee };
-            getEl('selectedHostelType').innerText = type;
-            getEl('selectedHostelFee').innerText = "₹" + fee.toLocaleString();
-            hide('hostelSelectionView'); show('hostelPaymentView');
-        }
-
+        // 6. HOSTEL (ROOM ALLOCATION)
+        function selectHostel(type, fee) { hostelBooking = { type, fee }; getEl('selectedHostelType').innerText = type; hide('hostelSelectionView'); show('hostelPaymentView'); }
         function payHostelFee() {
-            alert("Hostel Booking Confirmed!");
+            // Allocate Random Room
+            const room = "Block " + ["A","B","C"][Math.floor(Math.random()*3)] + " - " + Math.floor(Math.random()*300+100);
+            alert("Booked Successfully! Allotted Room: " + room);
             hide('hostelPaymentView');
-            getEl('dashHostelStatus').innerText = "Booked (" + hostelBooking.type + ")";
+            getEl('dashHostelStatus').innerText = room + " (" + hostelBooking.type + ")";
             getEl('dashHostelStatus').className = "text-xl font-bold text-green-600";
-            show('hostelFeeReceiptRow');
-            getEl('hostelReceiptAmt').innerText = "₹" + hostelBooking.fee.toLocaleString();
-            getEl('receiptDate3').innerText = new Date().toLocaleDateString();
-            switchTab('home'); 
+            show('hostelFeeReceiptRow'); getEl('hostelReceiptAmt').innerText = "₹" + hostelBooking.fee.toLocaleString(); getEl('receiptDate3').innerText = new Date().toLocaleDateString();
+            switchTab('home');
         }
 
-        // 7. PDF
-        function downloadReceipt(title, amount) {
+        function downloadReceipt(t, a) {
             const doc = new window.jspdf.jsPDF();
-            doc.setFillColor(211, 47, 47); doc.rect(0, 0, 210, 20, 'F');
-            doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.text("P P SAVANI UNIVERSITY", 105, 13, { align: 'center' });
-            doc.setTextColor(0, 0, 0); doc.setFontSize(14); doc.text("PAYMENT RECEIPT", 105, 40, { align: 'center' });
-            
-            doc.setFontSize(11);
-            doc.text(`Receipt No: PPSU-${Math.floor(Math.random()*100000)}`, 15, 60);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 68);
-            
-            const data = [
-                ["Student Name", currentUser ? currentUser.fullName : "Student"],
-                ["Application ID", currentUser ? currentUser.applicationId : "--"],
-                ["Payment For", title],
-                ["Amount Paid", `INR ${amount}/-`],
-                ["Status", "SUCCESS"]
-            ];
-            
-            doc.autoTable({
-                startY: 80,
-                head: [['Description', 'Details']],
-                body: data,
-                theme: 'grid',
-                headStyles: { fillColor: [211, 47, 47] }
-            });
-            doc.save(`${title.replace(/\s/g, '_')}_Receipt.pdf`);
-        }
-
-        function downloadFeeStructure() {
-            const doc = new window.jspdf.jsPDF();
-            doc.text("PPSU Academic Fee Structure 2026-27", 14, 20);
-            doc.autoTable({ html: '#feeTable', startY: 30 });
-            doc.save('PPSU_Fee_Structure.pdf');
+            doc.text("PPSU RECEIPT", 105, 20, {align:'center'}); doc.text(`Amount: INR ${a}`, 20, 40); doc.save('Receipt.pdf');
         }
     </script>
 </body>
