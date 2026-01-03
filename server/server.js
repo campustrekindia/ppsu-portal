@@ -33,11 +33,24 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Database Schema
 const StudentSchema = new mongoose.Schema({
-    fullName: String, aadhaar: String, dob: String, course: String,
-    mobile: String, referral: String, applicationId: String, date: String,
-    regFeeStatus: String, // ₹12,500
-    appFeeStatus: String, // ₹1,200
-    email: String, address: String, city: String, state: String, pincode: String
+    // Registration Data
+    fullName: String, 
+    aadhaar: String, 
+    dob: String, 
+    course: String,
+    mobile: String, 
+    referral: String, 
+    applicationId: String, 
+    date: String,
+    // Fee Status
+    regFeeStatus: String, // ₹12,500 Admission Fee
+    appFeeStatus: String, // ₹1,200 Application Fee
+    // Application Data
+    email: String, 
+    address: String, 
+    city: String, 
+    state: String, 
+    pincode: String
 });
 const Student = mongoose.model('Student', StudentSchema);
 
@@ -55,15 +68,20 @@ const auth = new google.auth.GoogleAuth({
 
 app.get('/', (req, res) => res.send('PPSU ERP Backend Live!'));
 
-// --- ROUTE 1: REGISTER ---
+// --- ROUTE 1: REGISTER (Step 1) ---
 app.post('/api/register', async (req, res) => {
     try {
         const existing = await Student.findOne({ mobile: req.body.mobile });
         if (existing) return res.status(400).json({ error: "Mobile number already registered." });
 
-        const newStudent = new Student({ ...req.body, regFeeStatus: "Pending", appFeeStatus: "Pending" });
+        const newStudent = new Student({ 
+            ...req.body, 
+            regFeeStatus: "Pending", 
+            appFeeStatus: "Pending" 
+        });
         await newStudent.save();
 
+        // Append to Sheet (Columns A-O)
         const sheets = google.sheets({ version: 'v4', auth });
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -71,9 +89,17 @@ app.post('/api/register', async (req, res) => {
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[
-                    req.body.fullName, req.body.aadhaar, req.body.dob, req.body.course, 
-                    req.body.mobile, req.body.referral, req.body.applicationId, 
-                    new Date().toLocaleDateString(), "Pending", "Pending", "", "", "", "", ""
+                    req.body.fullName, 
+                    req.body.aadhaar, 
+                    req.body.dob, 
+                    req.body.course, 
+                    req.body.mobile, 
+                    req.body.referral, 
+                    req.body.applicationId, 
+                    new Date().toLocaleDateString(),
+                    "Pending", // I: Reg Fee
+                    "Pending", // J: App Fee
+                    "", "", "", "", "" // K-O: Address Empty
                 ]]
             }
         });
@@ -85,14 +111,18 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- ROUTE 2: LOGIN ---
+// --- ROUTE 2: LOGIN (Checks Fee) ---
 app.post('/api/login', async (req, res) => {
     try {
         const { mobile, dob } = req.body;
         const student = await Student.findOne({ mobile: mobile, dob: dob });
 
         if (!student) return res.status(401).json({ error: "Invalid Credentials" });
-        if (student.regFeeStatus !== "Paid") return res.status(403).json({ error: "Admission Fee (₹12,500) Pending." });
+
+        // STRICT CHECK: Must pay ₹12,500 to login
+        if (student.regFeeStatus !== "Paid") {
+            return res.status(403).json({ error: "Admission Fee (₹12,500) Pending. Please Register & Pay." });
+        }
 
         res.status(200).json({ message: "Success", student: student });
     } catch (error) {
@@ -100,33 +130,49 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// --- ROUTE 3: UPDATE APP ---
+// --- ROUTE 3: UPDATE APPLICATION (Address & Fees) ---
 app.post('/api/update-application', async (req, res) => {
     try {
         const { applicationId, ...updates } = req.body;
-        const updatedStudent = await Student.findOneAndUpdate({ applicationId: applicationId }, { $set: updates }, { new: true });
+
+        const updatedStudent = await Student.findOneAndUpdate(
+            { applicationId: applicationId },
+            { $set: updates },
+            { new: true }
+        );
 
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
+        // Update Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
         const rows = idList.data.values;
         let rowIndex = -1;
 
-        if (rows && rows.length > 0) rowIndex = rows.findIndex(row => row[0] === applicationId);
+        if (rows && rows.length > 0) {
+            rowIndex = rows.findIndex(row => row[0] === applicationId);
+        }
 
         if (rowIndex !== -1) {
             const sheetRow = rowIndex + 1;
+            
+            // Update Reg Fee (Column I)
             if (updates.regFeeStatus) {
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
                     valueInputOption: 'USER_ENTERED', resource: { values: [[updates.regFeeStatus]] }
                 });
             }
+
+            // Update App Data (Columns J-O)
             if (updates.email || updates.appFeeStatus) {
                 const rowValues = [
-                    updatedStudent.appFeeStatus, updatedStudent.email, updatedStudent.address, 
-                    updatedStudent.city, updatedStudent.state, updatedStudent.pincode
+                    updatedStudent.appFeeStatus,
+                    updatedStudent.email, 
+                    updatedStudent.address, 
+                    updatedStudent.city, 
+                    updatedStudent.state, 
+                    updatedStudent.pincode
                 ];
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: SPREADSHEET_ID, range: `Sheet1!J${sheetRow}:O${sheetRow}`, 
@@ -140,7 +186,7 @@ app.post('/api/update-application', async (req, res) => {
     }
 });
 
-// --- ROUTE 4: UPLOAD ---
+// --- ROUTE 4: UPLOAD (To Shared Drive) ---
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file.");
