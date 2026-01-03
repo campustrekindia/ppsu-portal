@@ -339,9 +339,10 @@
         let hostelBooking = { status: 'none', fee: 0 };
         let tempPhotoUrl = ""; 
         
-        // --- IMPORTANT: CHECK THIS URL ---
-        // This MUST match your Render Service URL exactly.
-        const API = "https://ppsu-backend.onrender.com/api"; 
+        // --- CONFIGURATION ---
+        const API = "https://ppsu-backend.onrender.com/api"; // Your Render URL
+        const EDIT_DEADLINE = new Date("2026-04-05"); // 3 Months from today
+        // ---------------------
 
         const getEl = (id) => document.getElementById(id);
         const show = (id) => { if(getEl(id)) getEl(id).classList.remove('hidden'); }
@@ -374,13 +375,52 @@
                     show('hostelSelectionView'); hide('hostelDashboardView');
                 }
             }
+            // Check Edit Deadline specifically when clicking App tab
+            if(t==='app') checkEditDeadline();
         }
 
-        // --- 1. SMART REGISTRATION (DEBUGGING ENABLED) ---
+        // --- NEW FEATURE: CHECK DEADLINE ---
+        function checkEditDeadline() {
+            const now = new Date();
+            const inputs = ['appEmail', 'appAddress', 'appCity', 'appState', 'appPincode'];
+            const btn = getEl('submitAppBtn');
+            
+            // Check if user has ALREADY paid app fee (Lock it)
+            if(currentUser && currentUser.appFeeStatus === "Paid") {
+                inputs.forEach(id => {
+                    const el = getEl(id);
+                    if(el) { el.disabled = true; el.classList.add('bg-gray-100', 'cursor-not-allowed'); }
+                });
+                btn.innerText = "Details Saved & Fee Paid";
+                btn.className = "px-8 py-3 bg-green-600 text-white font-bold rounded-lg cursor-not-allowed opacity-80";
+                btn.disabled = true;
+                return;
+            }
+
+            // Check if DATE has passed (Lock it)
+            if (now > EDIT_DEADLINE) {
+                inputs.forEach(id => {
+                    const el = getEl(id);
+                    if(el) { el.disabled = true; el.classList.add('bg-gray-100', 'cursor-not-allowed'); }
+                });
+                btn.innerText = "Application Finalised (Edit Window Closed)";
+                btn.className = "px-8 py-3 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed";
+                btn.disabled = true;
+            } else {
+                // Still open
+                inputs.forEach(id => {
+                    const el = getEl(id);
+                    if(el) { el.disabled = false; el.classList.remove('bg-gray-100', 'cursor-not-allowed'); }
+                });
+                btn.innerText = "Save & Pay App Fee (₹1,200)";
+                btn.className = "px-8 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg transition";
+                btn.disabled = false;
+            }
+        }
+
+        // --- 1. SMART REGISTRATION ---
         async function handleRegistration(e) {
             e.preventDefault();
-            
-            // Disable button to prevent double clicks
             const btn = e.target.querySelector('button[type="submit"]');
             const originalText = btn.innerText;
             btn.innerText = "Processing..."; btn.disabled = true;
@@ -392,29 +432,23 @@
             };
 
             try {
-                console.log("Sending Request to:", `${API}/register`); // Check Console
                 const res = await fetch(`${API}/register`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(data) 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) 
                 });
-
-                const responseData = await res.json(); // Read the server response
+                const responseData = await res.json();
 
                 if(res.ok) {
-                    // Success!
                     currentUser = data; 
                     getEl('summaryCourse').innerText = data.course;
                     hide('step1-content'); show('step2-content'); 
                     getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300"; 
                     getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
                 } else {
-                    // SERVER ERROR FOUND
                     alert("Registration Failed: " + (responseData.error || "Unknown Server Error"));
                 }
             } catch(e) { 
                 console.error(e);
-                alert("Connection Error! Please check:\n1. Is the Backend URL correct?\n2. Is the Server running on Render?"); 
+                alert("Connection Error! Check Backend URL."); 
             } finally {
                 btn.innerText = originalText; btn.disabled = false;
             }
@@ -446,6 +480,13 @@
             if(getEl('appAadhaar')) getEl('appAadhaar').innerText = user.aadhaar;
             if(getEl('appCourse')) getEl('appCourse').innerText = user.course;
             
+            // Fill inputs if they exist in DB
+            if(user.email) getEl('appEmail').value = user.email;
+            if(user.address) getEl('appAddress').value = user.address;
+            if(user.city) getEl('appCity').value = user.city;
+            if(user.state) getEl('appState').value = user.state;
+            if(user.pincode) getEl('appPincode').value = user.pincode;
+
             getEl('idCardName').innerText = user.fullName; getEl('idCardNo').innerText = "ID: " + user.applicationId; getEl('idCardCourseDisplay').innerText = user.course; getEl('idCardDob').innerText = user.dob;
             
             if(user.hostelRoom && user.hostelRoom !== "Not Booked") {
@@ -457,10 +498,12 @@
             if(user.messFeeStatus === "Paid") { hide('messActions'); show('messPaidBadge'); }
 
             if(user.appFeeStatus === "Paid") {
-                getEl('submitAppBtn').innerText = "Details Saved & Fee Paid"; getEl('submitAppBtn').className = "px-8 py-3 bg-green-600 text-white font-bold rounded-lg cursor-not-allowed opacity-80"; getEl('submitAppBtn').disabled = true;
                 getEl('dashAppStatus').innerText = "Submitted"; getEl('dashAppStatus').className = "text-xl font-bold text-green-600";
                 show('appFeeReceiptRow');
             }
+            
+            // Apply Date Lock Check
+            checkEditDeadline();
         }
 
         // --- 3. OTHER FUNCTIONS ---
