@@ -15,68 +15,82 @@ const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4';
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Multer for File Uploads
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-// Database Connection
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
 
+// --- UPDATED DATABASE SCHEMA ---
+// We kept all old fields and added the 5 new ones
 const StudentSchema = new mongoose.Schema({
-    fullName: String, aadhaar: String, dob: String, course: String,
-    mobile: String, referral: String, applicationId: String, date: String
+    fullName: String, 
+    aadhaar: String, 
+    dob: String, 
+    course: String,
+    mobile: String, 
+    referral: String, 
+    applicationId: String, 
+    date: String,
+    // NEW FIELDS
+    email: String, 
+    address: String, 
+    city: String, 
+    state: String, 
+    pincode: String
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// --- SMART KEY FILE FINDER ---
-// Render puts secret files in the repo root, but we run inside /server
-// This block finds the file wherever it is.
+// --- KEY FILE FINDER ---
 let KEY_PATH = 'credentials.json';
 if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
-    // If not in server folder, look one level up
     if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
         KEY_PATH = '../credentials.json';
-        console.log("Found credentials in parent directory.");
-    } else {
-        console.error("CRITICAL ERROR: credentials.json not found in server or root!");
     }
 }
-// -----------------------------
 
-// Google Auth Setup
 const auth = new google.auth.GoogleAuth({
     keyFile: KEY_PATH, 
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
 });
 
-// ROUTES
-app.get('/', (req, res) => res.send('PPSU Google Integrated Backend Live!'));
+app.get('/', (req, res) => res.send('PPSU Backend Live!'));
 
-// 1. Register
+// --- REGISTRATION ROUTE ---
 app.post('/api/register', async (req, res) => {
     try {
         const newStudent = new Student(req.body);
         await newStudent.save();
 
         const sheets = google.sheets({ version: 'v4', auth });
+        
+        // We append all data including the new fields to Google Sheets
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:H', 
+            range: 'Sheet1!A:M', // Expanded range A to M
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[
-                    req.body.fullName, req.body.aadhaar,
-                    req.body.dob, req.body.course,
-                    req.body.mobile, req.body.referral,
-                    req.body.applicationId, new Date().toLocaleDateString()
+                    req.body.fullName, 
+                    req.body.aadhaar,
+                    req.body.dob, 
+                    req.body.course,
+                    req.body.mobile, 
+                    req.body.referral,
+                    req.body.applicationId, 
+                    new Date().toLocaleDateString(),
+                    // NEW DATA COLUMNS
+                    req.body.email, 
+                    req.body.address, 
+                    req.body.city, 
+                    req.body.state, 
+                    req.body.pincode
                 ]]
             }
         });
@@ -88,7 +102,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// 2. Upload
+// --- UPLOAD ROUTE ---
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
