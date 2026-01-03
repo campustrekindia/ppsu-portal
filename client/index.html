@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPSU Student Portal 2026 - Enhanced</title>
-    
+    <title>PPSU Student ERP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,696 +15,770 @@
             theme: {
                 extend: {
                     colors: { 
-                        brand: '#EE3F36', 
-                        brandDark: '#b91c1c',
-                        dark: '#0f172a', 
-                        surface: '#ffffff' 
+                        ppsuRed: '#D32F2F', 
+                        ppsuDark: '#1F2937', 
+                        ppsuLight: '#F3F4F6',
+                        ppsuBlue: '#3B82F6'
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    animation: {
-                        'slide-in': 'slideIn 0.3s ease-out forwards',
-                        'fade-in': 'fadeIn 0.4s ease-out forwards'
-                    },
-                    keyframes: {
-                        slideIn: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(0)' } },
-                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
-                    }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
                 }
             }
         }
     </script>
     
     <style>
-        body { background-color: #f1f5f9; -webkit-font-smoothing: antialiased; }
+        body { background-color: #F3F4F6; font-family: 'Inter', sans-serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .nav-item { transition: all 0.2s ease-in-out; cursor: pointer; border-radius: 0.5rem; margin-bottom: 4px; }
+        .nav-item:hover { background-color: rgba(255, 255, 255, 0.1); color: white; }
+        .nav-item.active { background-color: #D32F2F; color: white; box-shadow: 0 4px 6px -1px rgba(211, 47, 47, 0.4); }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .sidebar-transition { transition: transform 0.3s ease-in-out; }
-        
-        /* Toast Notification */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid #EE3F36; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); display: flex; align-items: center; gap: 12px; min-width: 300px; }
-        .toast.show { transform: translateX(0); }
-        .toast-success { border-color: #10b981; }
-        .toast-error { border-color: #ef4444; }
-
-        .loader-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #EE3F36; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #999; }
     </style>
 </head>
-<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+<body class="text-gray-800 h-screen overflow-hidden flex flex-col">
 
-    <div id="toast-container"></div>
+    <header id="publicHeader" class="bg-white shadow-sm z-50 sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showHome()">
+                <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" onerror="this.outerHTML='<div class=\'text-2xl font-bold text-ppsuRed\'>PPSU ERP</div>'" class="h-12 object-contain">
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="showHome()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-ppsuRed transition">Home</button>
+                <button onclick="showLoginScreen()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-ppsuRed transition">Student Login</button>
+                <button onclick="showRegistration()" class="px-6 py-2 bg-ppsuRed text-white text-sm font-bold rounded-full shadow hover:bg-red-700 transition">Admission 2026</button>
+            </div>
+        </div>
+    </header>
 
-    <div id="app" class="flex h-full w-full relative">
-
-        <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-dark text-slate-300 h-full fixed md:relative z-40 sidebar-transition -translate-x-full md:translate-x-0">
-            <div class="h-16 flex items-center px-6 border-b border-slate-700 bg-slate-900">
-                <i class="fa-solid fa-graduation-cap text-brand text-2xl mr-3"></i>
-                <span class="text-white font-bold text-lg tracking-wide">PPSU Portal</span>
-                <button class="md:hidden ml-auto text-white" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="mainContainer" class="flex-grow overflow-y-auto">
+        
+        <div id="homeFlow" class="min-h-[calc(100vh-80px)] relative flex items-center justify-center fade-in">
+            <div class="absolute inset-0 z-0">
+                <img src="https://timess3spore.s3.amazonaws.com/ndata/media/College/college_desktop_webp/1680463347.webp" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
             </div>
 
-            <div class="p-6 border-b border-slate-700/50 bg-slate-800/50">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand to-orange-500 flex items-center justify-center text-white font-bold shadow-lg" id="sideInitials">U</div>
+            <div class="relative z-10 container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="text-white space-y-6">
+                    <span class="inline-block px-3 py-1 bg-red-600/20 border border-red-500 rounded-full text-xs font-bold tracking-wider text-red-100 uppercase mb-2">Admissions Open 2026-27</span>
+                    <h1 class="text-5xl md:text-7xl font-bold leading-tight">Future Ready <br><span class="text-ppsuRed">Education</span></h1>
+                    <p class="text-lg text-gray-300 max-w-lg">Join P P Savani University, a global center of excellence nurturing leaders of tomorrow through holistic development.</p>
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <button onclick="showRegistration()" class="px-8 py-4 bg-ppsuRed text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition transform hover:-translate-y-1">Apply Now <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                        <button onclick="showLoginScreen()" class="px-8 py-4 bg-white/10 backdrop-blur border border-white/20 text-white font-bold rounded-lg hover:bg-white hover:text-black transition">Student ERP Login</button>
+                    </div>
+                </div>
+                <div class="hidden lg:block"></div> 
+            </div>
+        </div>
+
+        <div id="registrationFlow" class="hidden min-h-[calc(100vh-80px)] bg-gray-50 py-12 px-4">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 fade-in">
+                <div class="bg-ppsuDark p-6 text-white flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Admission Registration</h2>
+                    <div class="flex gap-2">
+                        <span id="step1-dot" class="w-3 h-3 rounded-full bg-ppsuRed"></span>
+                        <span id="step2-dot" class="w-3 h-3 rounded-full bg-gray-600"></span>
+                        <span id="step3-dot" class="w-3 h-3 rounded-full bg-gray-600"></span>
+                    </div>
+                </div>
+
+                <div id="step1-content" class="p-8">
+                    <form onsubmit="handleRegistration(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Full Name</label><input type="text" id="fullName" required class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed focus:border-transparent outline-none bg-gray-50" placeholder="As per Aadhaar"></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Aadhaar Number</label><input type="text" id="aadhaar" required maxlength="12" class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50"></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Date of Birth</label><input type="date" id="dob" required class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50"></div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Course</label>
+                                <select id="course" required class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50">
+                                    <option value="" disabled selected>Select Program</option>
+                                    <optgroup label="Engineering"><option value="B.Tech Computer Engineering">B.Tech Computer</option><option value="B.Tech Civil Engineering">B.Tech Civil</option></optgroup>
+                                    <optgroup label="Management"><option value="BBA">BBA</option><option value="MBA">MBA</option></optgroup>
+                                </select>
+                            </div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Mobile</label><input type="tel" id="mobile" required maxlength="10" class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50"></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Referral Name</label><input type="text" id="referral" required class="w-full mt-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50"></div>
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 shadow-lg transition">Proceed to Payment <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                    </form>
+                </div>
+
+                <div id="step2-content" class="hidden p-10 text-center">
+                    <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-credit-card text-3xl text-blue-600"></i></div>
+                    <h3 class="text-2xl font-bold text-gray-900">Confirm Registration</h3>
+                    <p class="text-gray-500 mb-8">Please pay the admission fee to generate your student credentials.</p>
+                    
+                    <div class="bg-gray-50 rounded-xl border border-gray-200 p-6 max-w-sm mx-auto mb-8 text-left">
+                        <div class="flex justify-between mb-2"><span class="text-gray-500">Student</span><span class="font-bold" id="summaryName">--</span></div>
+                        <div class="flex justify-between mb-4 pb-4 border-b"><span class="text-gray-500">Course</span><span class="font-bold" id="summaryCourse">--</span></div>
+                        <div class="flex justify-between items-center"><span class="font-bold text-lg">Total Payable</span><span class="text-2xl font-bold text-ppsuRed">₹12,500</span></div>
+                    </div>
+                    <button onclick="processAdmissionPayment()" class="w-full max-w-sm py-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-lg transition">Pay Securely Now</button>
+                    <div id="paymentLoader" class="hidden mt-6"><div class="loader mx-auto"></div><p class="text-xs text-gray-500 mt-2 font-medium">Processing Transaction...</p></div>
+                </div>
+
+                <div id="step3-content" class="hidden p-10 text-center">
+                    <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-4xl text-green-600"></i></div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-2">Welcome to PPSU!</h3>
+                    <p class="text-gray-500 mb-8">Your registration is complete. Use these credentials to login.</p>
+                    
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-6 max-w-sm mx-auto mb-8 text-left relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-blue-100 rounded-bl-full -mr-8 -mt-8"></div>
+                        <p class="text-sm text-blue-600 font-bold uppercase mb-1">Username</p>
+                        <p class="text-xl font-mono font-bold text-gray-900 mb-4" id="credUsername">--</p>
+                        <p class="text-sm text-blue-600 font-bold uppercase mb-1">Password</p>
+                        <p class="text-xl font-mono font-bold text-gray-900" id="credPassword">--</p>
+                        <p class="text-xs text-gray-400 mt-4 font-mono">App ID: <span id="credAppId"></span></p>
+                    </div>
+                    
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="downloadReceipt('Admission Fee', 12500)" class="px-6 py-3 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50">Download Receipt</button>
+                        <button onclick="showLoginScreen()" class="px-6 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg">Login to ERP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loginFlow" class="hidden min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 p-4">
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 fade-in">
+                <div class="bg-ppsuDark p-8 text-center">
+                    <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" class="h-12 mx-auto bg-white p-2 rounded mb-4">
+                    <h2 class="text-2xl font-bold text-white">Student ERP Login</h2>
+                    <p class="text-gray-400 text-sm mt-1">Enter your credentials to continue</p>
+                </div>
+                <div class="p-8">
+                    <form onsubmit="handleLogin(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Mobile Number</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-3 text-gray-400"><i class="fa-solid fa-phone"></i></span>
+                                <input type="tel" id="loginMobile" required class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50" placeholder="10-digit Mobile">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-3 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="loginPass" required class="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-ppsuRed bg-gray-50" placeholder="DOB (YYYY-MM-DD)">
+                            </div>
+                        </div>
+                        <button type="submit" id="loginBtn" class="w-full py-4 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 shadow-md transition">Secure Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div> <div id="dashboardFlow" class="hidden fixed inset-0 z-[100] bg-gray-100 flex overflow-hidden">
+        
+        <aside class="w-72 bg-ppsuDark text-white flex flex-col shadow-2xl relative z-20">
+            <div class="h-20 flex items-center gap-3 px-6 bg-black/20 border-b border-white/10">
+                <div class="w-8 h-8 bg-ppsuRed rounded flex items-center justify-center"><i class="fa-solid fa-graduation-cap"></i></div>
+                <span class="font-bold text-lg tracking-wide">PPSU ERP</span>
+            </div>
+            
+            <div class="p-6 border-b border-white/10 bg-white/5">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-ppsuRed to-orange-500 flex items-center justify-center font-bold text-xl shadow-lg">
+                        <span id="sidebarInitials">S</span>
+                    </div>
                     <div class="overflow-hidden">
-                        <h4 class="text-sm font-bold text-white truncate" id="sideName">Guest</h4>
-                        <p class="text-xs text-slate-400" id="sideId">ID: Pending</p>
+                        <p id="sidebarName" class="font-bold text-sm truncate">Student Name</p>
+                        <p id="sidebarAppId" class="text-xs text-gray-400 font-mono">APP0000</p>
                     </div>
                 </div>
             </div>
 
-            <nav class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-                <button onclick="nav('overview')" id="btn-overview" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 hover:text-white transition group active-nav">
-                    <i class="fa-solid fa-grid-2 text-slate-400 group-hover:text-brand transition"></i> Overview
-                </button>
-                <button onclick="nav('application')" id="btn-application" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 hover:text-white transition group">
-                    <i class="fa-solid fa-file-pen text-slate-400 group-hover:text-brand transition"></i> Application
-                </button>
-                <button onclick="nav('documents')" id="btn-documents" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 hover:text-white transition group">
-                    <i class="fa-solid fa-folder-open text-slate-400 group-hover:text-brand transition"></i> Documents
-                </button>
-                <button onclick="nav('hostel')" id="btn-hostel" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 hover:text-white transition group">
-                    <i class="fa-solid fa-bed text-slate-400 group-hover:text-brand transition"></i> Hostel
-                </button>
-                <button onclick="nav('fees')" id="btn-fees" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 hover:text-white transition group">
-                    <i class="fa-solid fa-receipt text-slate-400 group-hover:text-brand transition"></i> Fee & Receipts
-                </button>
+            <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+                <div onclick="switchTab('home')" id="nav-home" class="nav-item active flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+                </div>
+                <div onclick="switchTab('app')" id="nav-app" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-file-contract w-5"></i> My Application
+                </div>
+                <div onclick="switchTab('hostel')" id="nav-hostel" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-bed w-5"></i> Hostel Booking
+                </div>
+                <div onclick="switchTab('certs')" id="nav-certs" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-folder-open w-5"></i> Documents
+                </div>
+                <div onclick="switchTab('idcard')" id="nav-idcard" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-id-badge w-5"></i> Digital ID
+                </div>
+                <div onclick="switchTab('fees')" id="nav-fees" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-indian-rupee-sign w-5"></i> Fee Structure
+                </div>
+                <div onclick="switchTab('receipts')" id="nav-receipts" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium">
+                    <i class="fa-solid fa-clock-rotate-left w-5"></i> History
+                </div>
             </nav>
 
-            <div class="p-4 border-t border-slate-700">
-                <button onclick="logout()" class="w-full py-2 px-4 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition flex items-center justify-center gap-2">
+            <div class="p-4 border-t border-white/10">
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-red-600/90 hover:bg-red-600 transition text-sm font-bold shadow-lg">
                     <i class="fa-solid fa-power-off"></i> Logout
                 </button>
             </div>
         </aside>
 
-        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm"></div>
-
-        <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
-            
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-20">
+        <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <header class="bg-white shadow-sm h-20 flex items-center justify-between px-8 z-10">
+                <h1 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="md:hidden text-slate-500 hover:text-brand"><i class="fa-solid fa-bars text-xl"></i></button>
-                    <h2 id="pageTitle" class="text-xl font-bold text-slate-800">Dashboard</h2>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div id="notificationBtn" class="relative cursor-pointer text-slate-400 hover:text-brand transition">
-                        <i class="fa-solid fa-bell text-xl"></i>
-                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </div>
-                    <div class="hidden md:block text-right">
-                        <p class="text-xs text-slate-400 font-medium">Academic Year</p>
-                        <p class="text-sm font-bold text-brand">2026-27</p>
-                    </div>
+                    <span id="globalStatusBadge" class="px-4 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
+                        <i class="fa-solid fa-circle-check mr-1"></i> Admission Confirmed
+                    </span>
+                    <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-200"><i class="fa-solid fa-bell"></i></div>
                 </div>
             </header>
 
-            <div id="contentArea" class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+            <div class="flex-1 overflow-y-auto p-8" id="dashContentArea">
                 
-                <div id="publicView" class="max-w-6xl mx-auto space-y-12">
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row min-h-[500px] animate-fade-in">
-                        <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white relative z-10">
-                            <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" class="h-16 w-auto mb-8 self-start" alt="PPSU">
-                            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4 leading-tight">Future Begins <br><span class="text-brand">Here & Now.</span></h1>
-                            <p class="text-slate-500 text-lg mb-8 leading-relaxed">Admissions open for 2026. Join a legacy of excellence in Engineering, Management, and Sciences.</p>
-                            
-                            <div class="bg-slate-100 p-1 rounded-lg inline-flex mb-6 w-full max-w-sm">
-                                <button onclick="switchAuth('login')" id="tab-login" class="w-1/2 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-slate-900 transition-all">Login</button>
-                                <button onclick="switchAuth('register')" id="tab-register" class="w-1/2 py-2 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition-all">New Admission</button>
-                            </div>
+                <div id="view-home" class="fade-in">
+                    <div class="bg-gradient-to-r from-ppsuDark to-gray-800 rounded-2xl p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+                        <div class="absolute right-0 top-0 h-full w-1/3 bg-white/5 skew-x-12 transform translate-x-12"></div>
+                        <h2 class="text-3xl font-bold mb-2">Welcome back, <span id="dashNameHome" class="text-ppsuRed">Student</span>!</h2>
+                        <p class="text-gray-400 max-w-xl">Your admission process is underway. Please ensure your application details are up to date and all necessary documents are uploaded.</p>
+                        <button onclick="switchTab('app')" class="mt-6 px-6 py-2 bg-ppsuRed text-white rounded-lg font-bold text-sm hover:bg-red-600 transition shadow-lg">Complete Application</button>
+                    </div>
 
-                            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 max-w-sm">
-                                <div>
-                                    <label class="text-xs font-bold text-slate-500 uppercase">Mobile Number</label>
-                                    <div class="relative">
-                                        <i class="fa-solid fa-mobile-screen absolute left-3 top-3.5 text-slate-400"></i>
-                                        <input type="tel" id="loginMobile" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-brand transition" placeholder="9876543210" required>
-                                    </div>
-                                </div>
-                                <button type="submit" class="w-full py-3 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition shadow-lg shadow-slate-900/20">Access Dashboard <i class="fa-solid fa-arrow-right ml-2"></i></button>
-                            </form>
-
-                            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4 max-w-sm hidden">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="text-xs font-bold text-slate-500 uppercase">Full Name</label>
-                                        <input type="text" id="regName" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-brand" required>
-                                    </div>
-                                    <div>
-                                        <label class="text-xs font-bold text-slate-500 uppercase">Mobile</label>
-                                        <input type="tel" id="regMobile" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-brand" required>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-slate-500 uppercase">Select Course</label>
-                                    <select id="regCourse" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-brand">
-                                        <option>B.Tech Computer Engineering</option>
-                                        <option>B.Tech Civil Engineering</option>
-                                        <option>BBA (Marketing)</option>
-                                        <option>MBA (Finance)</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="w-full py-3 bg-brand text-white font-bold rounded-lg hover:bg-brandDark transition shadow-lg shadow-brand/20">Start Application</button>
-                            </form>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Application Status</p>
+                            <p class="text-xl font-bold text-yellow-600" id="dashAppStatus">Pending</p>
                         </div>
-                        
-                        <div class="md:w-1/2 bg-slate-900 relative overflow-hidden hidden md:block">
-                            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="absolute inset-0 w-full h-full object-cover opacity-60">
-                            <div class="absolute bottom-0 left-0 p-12 text-white z-10">
-                                <div class="w-16 h-1 bg-brand mb-4"></div>
-                                <h3 class="text-2xl font-bold">100 Acres of Innovation</h3>
-                                <p class="text-slate-300 mt-2">Experience a campus designed for holistic growth.</p>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Hostel</p>
+                            <p class="text-xl font-bold text-gray-800" id="dashHostelStatus">Not Booked</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Reg Fee</p>
+                            <p class="text-xl font-bold text-green-600">Paid (₹12,500)</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                            <p class="text-xs font-bold text-gray-400 uppercase mb-2">Course</p>
+                            <p class="text-lg font-bold text-gray-800 truncate" id="dashCourseHome">--</p>
                         </div>
                     </div>
                 </div>
 
-                <div id="dashboardViews" class="hidden max-w-6xl mx-auto pb-10">
+                <div id="view-app" class="hidden fade-in max-w-5xl mx-auto">
+                    <form onsubmit="handleApplicationSubmit(event)" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-8 border-b border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="fa-solid fa-user-pen text-ppsuRed"></i> Personal Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Full Name</label><input type="text" id="appFullName" readonly class="w-full mt-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-500 cursor-not-allowed"></div>
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Mobile</label><input type="text" id="appMobile" readonly class="w-full mt-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-500 cursor-not-allowed"></div>
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Aadhaar</label><input type="text" id="appAadhaar" readonly class="w-full mt-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-500 cursor-not-allowed"></div>
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Course</label><input type="text" id="appCourse" readonly class="w-full mt-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded text-gray-500 cursor-not-allowed"></div>
+                                
+                                <div class="md:col-span-2">
+                                    <label class="text-xs font-bold text-gray-700 uppercase">Email Address</label>
+                                    <input type="email" id="appEmail" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-ppsuRed focus:border-transparent outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="text-xs font-bold text-gray-700 uppercase">Residential Address</label>
+                                    <input type="text" id="appAddress" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-ppsuRed outline-none">
+                                </div>
+                                <div><label class="text-xs font-bold text-gray-700 uppercase">City</label><input type="text" id="appCity" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded outline-none"></div>
+                                <div><label class="text-xs font-bold text-gray-700 uppercase">State</label><input type="text" id="appState" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded outline-none"></div>
+                                <div><label class="text-xs font-bold text-gray-700 uppercase">Pincode</label><input type="text" id="appPincode" required class="w-full mt-1 px-4 py-2 border border-gray-300 rounded outline-none"></div>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-gray-50 text-right">
+                            <button type="submit" id="submitAppBtn" class="px-8 py-3 bg-ppsuDark text-white font-bold rounded-lg hover:bg-black shadow-lg transition">Save & Pay App Fee (₹1,200)</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="view-certs" class="hidden fade-in max-w-6xl mx-auto">
+                    <div class="flex items-center gap-2 mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-600"></i> Maximum file size allowed is 10 MB per document.
+                    </div>
                     
-                    <div id="view-overview" class="view-section animate-fade-in">
-                        <div class="mb-8">
-                            <h1 class="text-3xl font-bold text-slate-800" id="greetUser">Hello, Student!</h1>
-                            <p class="text-slate-500 mt-1">Here is what's happening with your admission today.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">10th Marksheet</h4>
+                            <div class="preview-container"><img id="preview10th" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
+                            <input type="file" id="file10th" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('file10th', 'preview10th')">
+                            <button onclick="uploadCert('10th Marksheet', 'btn10th')" id="btn10th" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 relative overflow-hidden">
-                                <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-chart-line text-6xl text-brand"></i></div>
-                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Application Progress</p>
-                                <div class="flex items-end gap-2 mb-2">
-                                    <h2 class="text-4xl font-bold text-slate-800" id="progressPercent">0%</h2>
-                                </div>
-                                <div class="w-full bg-slate-100 rounded-full h-2">
-                                    <div id="progressBar" class="bg-brand h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
-                                </div>
-                                <p class="text-xs text-brand mt-2 font-medium" id="progressText">Complete profile to proceed</p>
-                            </div>
-
-                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Current Status</p>
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" id="statusDot"></div>
-                                    <h2 class="text-2xl font-bold text-slate-800" id="statusText">Pending</h2>
-                                </div>
-                                <p class="text-sm text-slate-500">Application Fee: <span id="feeStatusText" class="font-bold text-slate-800">Unpaid</span></p>
-                            </div>
-
-                            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-lg text-white flex flex-col justify-between">
-                                <div>
-                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Quick Action</p>
-                                    <h3 class="text-xl font-bold">Upload Documents</h3>
-                                </div>
-                                <button onclick="nav('documents')" class="self-start mt-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white py-2 px-4 rounded-lg text-sm transition">Go to Uploads</button>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">12th Marksheet</h4>
+                            <div class="preview-container"><img id="preview12th" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
+                            <input type="file" id="file12th" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('file12th', 'preview12th')">
+                            <button onclick="uploadCert('12th Marksheet', 'btn12th')" id="btn12th" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
                         </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-                                <h3 class="font-bold text-lg mb-4">Announcements</h3>
-                                <div class="space-y-4">
-                                    <div class="flex gap-4 items-start">
-                                        <div class="bg-blue-50 text-blue-600 p-2 rounded-lg text-xs font-bold text-center w-12 flex-shrink-0">JAN<br><span class="text-lg">15</span></div>
-                                        <div>
-                                            <h4 class="font-bold text-sm text-slate-800">Entrance Exam Schedule</h4>
-                                            <p class="text-xs text-slate-500 mt-1">The hall tickets will be available for download starting next week.</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-4 items-start">
-                                        <div class="bg-green-50 text-green-600 p-2 rounded-lg text-xs font-bold text-center w-12 flex-shrink-0">FEB<br><span class="text-lg">01</span></div>
-                                        <div>
-                                            <h4 class="font-bold text-sm text-slate-800">Document Verification</h4>
-                                            <p class="text-xs text-slate-500 mt-1">Online verification process begins.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">Transfer Certificate (TC)</h4>
+                            <div class="preview-container"><img id="previewTC" class="preview-img"><i class="fa-solid fa-file-image text-3xl text-gray-300"></i></div>
+                            <input type="file" id="fileTC" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('fileTC', 'previewTC')">
+                            <button onclick="uploadCert('TC', 'btnTC')" id="btnTC" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">Student Aadhaar</h4>
+                            <div class="preview-container"><img id="previewAadhaar" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
+                            <input type="file" id="fileAadhaar" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('fileAadhaar', 'previewAadhaar')">
+                            <button onclick="uploadCert('Student Aadhaar', 'btnAadhaar')" id="btnAadhaar" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">Father's Aadhaar</h4>
+                            <div class="preview-container"><img id="previewFather" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
+                            <input type="file" id="fileFather" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('fileFather', 'previewFather')">
+                            <button onclick="uploadCert('Father Aadhaar', 'btnFather')" id="btnFather" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center hover:shadow-md transition">
+                            <h4 class="font-bold text-gray-800 mb-4">Mother's Aadhaar</h4>
+                            <div class="preview-container"><img id="previewMother" class="preview-img"><i class="fa-solid fa-id-card text-3xl text-gray-300"></i></div>
+                            <input type="file" id="fileMother" class="block w-full text-xs text-slate-500 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200" onchange="previewFile('fileMother', 'previewMother')">
+                            <button onclick="uploadCert('Mother Aadhaar', 'btnMother')" id="btnMother" class="w-full py-2 bg-gray-800 text-white rounded text-sm font-bold hover:bg-black transition">Upload</button>
                         </div>
                     </div>
-
-                    <div id="view-application" class="view-section hidden animate-fade-in">
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="border-b border-slate-100 p-6 flex justify-between items-center">
-                                <h3 class="font-bold text-lg">Application Details</h3>
-                                <span id="appFormStatusBadge" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold">Draft</span>
-                            </div>
-                            <div class="p-6 md:p-8">
-                                <form id="mainAppForm" onsubmit="saveApplication(event)">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" id="app_name" class="w-full border rounded-lg px-4 py-2 bg-slate-50" readonly></div>
-                                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Course</label><input type="text" id="app_course" class="w-full border rounded-lg px-4 py-2 bg-slate-50" readonly></div>
-                                        <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Address</label><textarea id="app_address" rows="2" class="w-full border rounded-lg px-4 py-2 focus:border-brand outline-none" placeholder="Enter permanent address"></textarea></div>
-                                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">City</label><input type="text" id="app_city" class="w-full border rounded-lg px-4 py-2 focus:border-brand outline-none"></div>
-                                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Pincode</label><input type="text" id="app_pincode" class="w-full border rounded-lg px-4 py-2 focus:border-brand outline-none"></div>
-                                    </div>
-                                    <div class="flex justify-end gap-3">
-                                        <button type="button" onclick="downloadApplicationPDF()" class="px-4 py-2 text-brand border border-brand rounded-lg font-bold text-sm hover:bg-red-50 hidden" id="btnDownloadApp">Download PDF</button>
-                                        <button type="submit" id="btnSaveApp" class="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-black">Save & Pay ₹1,200</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="view-documents" class="view-section hidden animate-fade-in">
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                            <h3 class="font-bold text-lg mb-2">Document Repository</h3>
-                            <p class="text-sm text-slate-500 mb-6">Upload clear copies of your documents. These are saved locally in your browser for this demo.</p>
-                            
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="border border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center min-h-[200px] hover:border-brand transition group bg-slate-50">
-                                    <div class="w-full h-32 mb-3 bg-white rounded border border-slate-100 flex items-center justify-center overflow-hidden relative">
-                                        <img id="prev_10th" class="w-full h-full object-cover hidden">
-                                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 group-hover:text-brand transition" id="icon_10th"></i>
-                                    </div>
-                                    <h4 class="font-bold text-sm text-slate-700">10th Marksheet</h4>
-                                    <input type="file" id="file_10th" class="hidden" onchange="handleFileUpload('10th', this)">
-                                    <button onclick="document.getElementById('file_10th').click()" class="mt-2 text-xs text-brand font-bold hover:underline">Select File</button>
-                                </div>
-
-                                <div class="border border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center min-h-[200px] hover:border-brand transition group bg-slate-50">
-                                    <div class="w-full h-32 mb-3 bg-white rounded border border-slate-100 flex items-center justify-center overflow-hidden relative">
-                                        <img id="prev_12th" class="w-full h-full object-cover hidden">
-                                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 group-hover:text-brand transition" id="icon_12th"></i>
-                                    </div>
-                                    <h4 class="font-bold text-sm text-slate-700">12th Marksheet</h4>
-                                    <input type="file" id="file_12th" class="hidden" onchange="handleFileUpload('12th', this)">
-                                    <button onclick="document.getElementById('file_12th').click()" class="mt-2 text-xs text-brand font-bold hover:underline">Select File</button>
-                                </div>
-
-                                 <div class="border border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center min-h-[200px] hover:border-brand transition group bg-slate-50">
-                                    <div class="w-full h-32 mb-3 bg-white rounded border border-slate-100 flex items-center justify-center overflow-hidden relative">
-                                        <img id="prev_aadhar" class="w-full h-full object-cover hidden">
-                                        <i class="fa-solid fa-id-card text-3xl text-slate-300 group-hover:text-brand transition" id="icon_aadhar"></i>
-                                    </div>
-                                    <h4 class="font-bold text-sm text-slate-700">Aadhaar Card</h4>
-                                    <input type="file" id="file_aadhar" class="hidden" onchange="handleFileUpload('aadhar', this)">
-                                    <button onclick="document.getElementById('file_aadhar').click()" class="mt-2 text-xs text-brand font-bold hover:underline">Select File</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="view-hostel" class="view-section hidden animate-fade-in">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                                <h3 class="font-bold text-lg mb-4">Select Accommodation</h3>
-                                <div class="space-y-3">
-                                    <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-slate-50 transition">
-                                        <input type="radio" name="hostel" value="NONAC" class="w-5 h-5 text-brand" onchange="updateHostelTotal(75000)">
-                                        <div class="ml-3">
-                                            <span class="block font-bold text-slate-800">Non-AC (4 Sharing)</span>
-                                            <span class="block text-xs text-slate-500">₹75,000 / Year</span>
-                                        </div>
-                                    </label>
-                                    <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-slate-50 transition">
-                                        <input type="radio" name="hostel" value="AC3" class="w-5 h-5 text-brand" onchange="updateHostelTotal(110000)">
-                                        <div class="ml-3">
-                                            <span class="block font-bold text-slate-800">AC (3 Sharing)</span>
-                                            <span class="block text-xs text-slate-500">₹1,10,000 / Year</span>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div class="mt-6 pt-4 border-t flex justify-between items-center">
-                                    <div><p class="text-xs text-slate-500">Total Payable</p><p class="text-xl font-bold text-brand" id="hostelTotal">₹0</p></div>
-                                    <button onclick="payHostel()" class="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm">Book Now</button>
-                                </div>
-                            </div>
-                            <div class="bg-slate-100 rounded-xl p-6 flex flex-col items-center justify-center text-center">
-                                <i class="fa-solid fa-hotel text-5xl text-slate-300 mb-4"></i>
-                                <h4 class="font-bold text-slate-600">Your Booking Status</h4>
-                                <p id="hostelStatusMsg" class="text-sm text-slate-500 mt-2">No room allocated yet.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                     <div id="view-fees" class="view-section hidden animate-fade-in">
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b">
-                                    <tr>
-                                        <th class="p-4 font-bold text-slate-600">Description</th>
-                                        <th class="p-4 font-bold text-slate-600">Date</th>
-                                        <th class="p-4 font-bold text-slate-600">Amount</th>
-                                        <th class="p-4 font-bold text-slate-600">Status</th>
-                                        <th class="p-4 font-bold text-slate-600 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y" id="feeTableBody">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                 </div>
+
+                <div id="view-hostel" class="hidden fade-in max-w-6xl mx-auto">
+                    <div id="hostelSelectionView">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div onclick="selectHostel('Non-AC 4 Sharing', 75000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition group">
+                                <div class="h-40 bg-gray-100 rounded-xl mb-6 flex items-center justify-center group-hover:bg-red-50 transition"><i class="fa-solid fa-users text-5xl text-gray-400 group-hover:text-ppsuRed"></i></div>
+                                <h3 class="text-xl font-bold text-gray-900">Non-AC Room</h3>
+                                <p class="text-sm text-gray-500 mb-4">4 Students Sharing</p>
+                                <div class="text-2xl font-bold text-ppsuRed">₹75,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
+                                <button class="mt-6 w-full py-2 border border-ppsuRed text-ppsuRed font-bold rounded-lg group-hover:bg-ppsuRed group-hover:text-white transition">Select</button>
+                            </div>
+                            
+                            <div onclick="selectHostel('AC 3 Sharing', 110000)" class="bg-white rounded-2xl border-2 border-ppsuRed p-8 cursor-pointer hover:shadow-xl transition relative transform hover:-translate-y-2">
+                                <div class="absolute top-0 right-0 bg-ppsuRed text-white text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
+                                <div class="h-40 bg-blue-50 rounded-xl mb-6 flex items-center justify-center"><i class="fa-solid fa-snowflake text-5xl text-blue-400"></i></div>
+                                <h3 class="text-xl font-bold text-gray-900">AC Room</h3>
+                                <p class="text-sm text-gray-500 mb-4">3 Students Sharing</p>
+                                <div class="text-2xl font-bold text-ppsuRed">₹1,10,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
+                                <button class="mt-6 w-full py-2 bg-ppsuRed text-white font-bold rounded-lg hover:bg-red-700 transition">Select</button>
+                            </div>
+
+                            <div onclick="selectHostel('AC 2 Sharing', 140000)" class="bg-white rounded-2xl border border-gray-200 p-8 cursor-pointer hover:shadow-xl hover:border-ppsuRed transition group">
+                                <div class="h-40 bg-gray-100 rounded-xl mb-6 flex items-center justify-center group-hover:bg-red-50 transition"><i class="fa-solid fa-user-group text-5xl text-gray-400 group-hover:text-ppsuRed"></i></div>
+                                <h3 class="text-xl font-bold text-gray-900">Premium AC</h3>
+                                <p class="text-sm text-gray-500 mb-4">2 Students Sharing</p>
+                                <div class="text-2xl font-bold text-ppsuRed">₹1,40,000 <span class="text-sm text-gray-400 font-normal">/ year</span></div>
+                                <button class="mt-6 w-full py-2 border border-ppsuRed text-ppsuRed font-bold rounded-lg group-hover:bg-ppsuRed group-hover:text-white transition">Select</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="hostelPaymentView" class="hidden bg-white max-w-lg mx-auto rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Confirm Booking</h3>
+                        <p class="text-gray-500 mb-8">You are booking <span id="selectedHostelType" class="font-bold text-black">--</span></p>
+                        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-8 border">
+                            <span class="font-medium text-gray-600">Total Fee</span>
+                            <span class="text-2xl font-bold text-ppsuRed" id="selectedHostelFee">--</span>
+                        </div>
+                        <button onclick="payHostelFee()" class="w-full py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg transition">Pay & Book Room</button>
+                        <button onclick="document.getElementById('hostelPaymentView').classList.add('hidden'); document.getElementById('hostelSelectionView').classList.remove('hidden');" class="mt-4 text-gray-400 text-sm hover:text-gray-600 underline">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="view-idcard" class="hidden fade-in flex justify-center py-8">
+                    <div class="w-[320px] h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden relative border border-gray-200 flex flex-col transform hover:scale-105 transition duration-500">
+                        <div class="bg-ppsuDark h-28 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                            <div class="absolute inset-0 bg-red-600/20"></div>
+                            <img src="https://www.ppsu.ac.in/img/PPSUNAACA+Logo.png" class="h-10 bg-white p-1 rounded mb-2 relative z-10">
+                            <p class="text-[10px] font-bold tracking-[0.2em] relative z-10">P P SAVANI UNIVERSITY</p>
+                        </div>
+                        <div class="bg-ppsuRed text-white text-center py-1.5 font-bold text-xs uppercase tracking-wider shadow-md relative z-20" id="idCardCourseDisplay">--</div>
+                        
+                        <div class="flex justify-center -mt-10 relative z-30">
+                            <div class="w-24 h-24 bg-gray-200 border-4 border-white rounded-xl shadow-lg flex items-center justify-center text-gray-400">
+                                <i class="fa-solid fa-user text-4xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4 px-6 flex-grow">
+                            <h2 id="idCardName" class="text-lg font-bold text-gray-900 uppercase leading-tight">Student Name</h2>
+                            <p class="text-xs text-gray-500 mt-1 font-mono bg-gray-100 inline-block px-2 py-0.5 rounded" id="idCardNo">ID: --</p>
+                            
+                            <div class="mt-6 space-y-2 text-left text-xs bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                <div class="flex justify-between"><span class="text-gray-500">DOB</span><span class="font-bold" id="idCardDob">--</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">Validity</span><span class="font-bold text-green-600">2026 - 2030</span></div>
+                                <div class="flex justify-between"><span class="text-gray-500">Blood Group</span><span class="font-bold">B+</span></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 pt-0 text-center">
+                            <div class="h-8 bg-black w-3/4 mx-auto mb-2 opacity-80" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 2px, black 2px, black 4px);"></div>
+                            <p class="text-[8px] text-gray-400 uppercase">Property of PPSU • Non-Transferable</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-fees" class="hidden fade-in max-w-4xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-50 p-6 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="font-bold text-lg text-gray-800">Fee Structure (2026-27)</h3>
+                            <button onclick="downloadFeeStructure()" class="text-sm text-ppsuRed font-bold hover:underline flex items-center gap-1"><i class="fa-solid fa-download"></i> PDF</button>
+                        </div>
+                        <table class="w-full text-left text-sm" id="feeTable">
+                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-bold">
+                                <tr><th class="p-4">Semester</th><th class="p-4">Tuition Fee</th><th class="p-4">Exam Fee</th><th class="p-4">Total</th></tr>
+                            </thead>
+                            <tbody class="divide-y text-gray-700">
+                                <tr><td class="p-4 font-medium">Semester 1</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4 font-medium">Semester 2</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4 font-medium">Semester 3</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr><td class="p-4 font-medium">Semester 4</td><td class="p-4">₹45,000</td><td class="p-4">₹2,500</td><td class="p-4 font-bold">₹47,500</td></tr>
+                                <tr class="bg-gray-50 font-bold text-gray-900"><td class="p-4" colspan="3">Grand Total (4 Years)</td><td class="p-4 text-ppsuRed text-lg">₹3,80,000</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-receipts" class="hidden fade-in max-w-4xl mx-auto">
+                    <h3 class="font-bold text-lg text-gray-800 mb-6">Payment History</h3>
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                                <div><p class="font-bold text-gray-800">Admission Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate1">--</span></p></div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900 mb-1">₹12,500</p>
+                                <button onclick="downloadReceipt('Admission Fee', 12500)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
+                            </div>
+                        </div>
+
+                        <div id="appFeeReceiptRow" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-file-invoice"></i></div>
+                                <div><p class="font-bold text-gray-800">Application Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate2">--</span></p></div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900 mb-1">₹1,200</p>
+                                <button onclick="downloadReceipt('Application Fee', 1200)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
+                            </div>
+                        </div>
+
+                        <div id="hostelFeeReceiptRow" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:bg-gray-50 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa-solid fa-bed"></i></div>
+                                <div><p class="font-bold text-gray-800">Hostel Fee</p><p class="text-xs text-gray-500">Paid on <span id="receiptDate3">--</span></p></div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900 mb-1" id="hostelReceiptAmt">--</p>
+                                <button onclick="downloadReceipt('Hostel Fee', hostelBooking.fee)" class="text-xs text-blue-600 font-bold hover:underline">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> </div>
+    </div>
+
+    <div id="appPayModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[200] backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-sm w-full mx-4 transform scale-100 transition-transform">
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-wallet text-2xl text-blue-600"></i></div>
+            <h3 class="text-xl font-bold text-gray-900">Application Fee</h3>
+            <p class="text-sm text-gray-500 mb-6">One-time non-refundable processing charge.</p>
+            <div class="bg-gray-50 p-4 rounded-xl mb-6">
+                <p class="text-3xl text-ppsuRed font-bold">₹1,200</p>
             </div>
-        </main>
+            <button onclick="confirmAppPayment()" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow-lg">Pay Securely</button>
+            <button onclick="document.getElementById('appPayModal').classList.add('hidden')" class="mt-4 text-sm text-gray-400 hover:text-gray-600">Cancel</button>
+        </div>
     </div>
 
     <script>
-        // ================= STATE MANAGEMENT (LOCAL STORAGE) =================
-        const DB_KEY = 'PPSU_PORTAL_V1';
+        // --- GLOBAL STATE ---
+        let currentUser = null;
+        let hostelBooking = { status: 'none', fee: 0 };
+        const API = "https://ppsu-backend.onrender.com/api";
+
+        // --- UTILS ---
+        const getEl = (id) => document.getElementById(id);
+        const show = (id) => getEl(id).classList.remove('hidden');
+        const hide = (id) => getEl(id).classList.add('hidden');
+
+        // --- NAVIGATION ---
+        function showHome() { hide('registrationFlow'); hide('loginFlow'); hide('dashboardFlow'); show('homeFlow'); getEl('publicHeader').classList.remove('hidden'); }
+        function showRegistration() { hide('homeFlow'); hide('loginFlow'); show('registrationFlow'); }
+        function showLoginScreen() { hide('homeFlow'); hide('registrationFlow'); show('loginFlow'); }
         
-        let state = {
-            user: null, // { name, mobile, course, id }
-            application: { status: 'draft', address: '', city: '', pincode: '', paid: false },
-            documents: { '10th': null, '12th': null, 'aadhar': null }, // Stores Base64 strings
-            hostel: { booked: false, type: '', fee: 0 },
-            transactions: [] 
-        };
-
-        // Load State on Init
-        function init() {
-            const saved = localStorage.getItem(DB_KEY);
-            if(saved) {
-                state = JSON.parse(saved);
-                if(state.user) {
-                    showDashboard();
-                }
-            }
-            updateGreeting();
+        function switchTab(tabName) {
+            // Hide all views
+            ['home','app','hostel','certs','idcard','fees','receipts'].forEach(t => hide('view-'+t));
+            // Deactivate sidebar links
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Show selected
+            show('view-'+tabName);
+            getEl('nav-'+tabName).classList.add('active');
+            
+            // Update Title
+            const titles = { home:'Dashboard Overview', app:'My Application', hostel:'Hostel Booking', certs:'Document Uploads', idcard:'Digital ID Card', fees:'Fee Structure', receipts:'Payment Receipts'};
+            getEl('pageTitle').innerText = titles[tabName];
         }
 
-        function saveState() {
-            localStorage.setItem(DB_KEY, JSON.stringify(state));
-            updateUI();
-        }
-
-        // ================= AUTHENTICATION =================
-        function switchAuth(type) {
-            const loginForm = document.getElementById('loginForm');
-            const regForm = document.getElementById('registerForm');
-            const tabLogin = document.getElementById('tab-login');
-            const tabReg = document.getElementById('tab-register');
-
-            if(type === 'login') {
-                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
-                tabLogin.className = "w-1/2 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-slate-900 transition-all";
-                tabReg.className = "w-1/2 py-2 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition-all";
-            } else {
-                loginForm.classList.add('hidden'); regForm.classList.remove('hidden');
-                tabReg.className = "w-1/2 py-2 rounded-md text-sm font-bold shadow-sm bg-white text-slate-900 transition-all";
-                tabLogin.className = "w-1/2 py-2 rounded-md text-sm font-bold text-slate-500 hover:text-slate-700 transition-all";
-            }
-        }
-
-        function handleRegister(e) {
+        // --- 1. REGISTRATION ---
+        async function handleRegistration(e) {
             e.preventDefault();
-            const name = document.getElementById('regName').value;
-            const mobile = document.getElementById('regMobile').value;
-            const course = document.getElementById('regCourse').value;
+            const data = {
+                fullName: getEl('fullName').value,
+                aadhaar: getEl('aadhaar').value,
+                dob: getEl('dob').value,
+                course: getEl('course').value,
+                mobile: getEl('mobile').value,
+                referral: getEl('referral').value,
+                applicationId: '2026' + Math.floor(100000 + Math.random() * 900000)
+            };
 
-            state.user = {
-                name: name,
-                mobile: mobile,
-                course: course,
-                id: 'APP' + Math.floor(1000 + Math.random() * 9000)
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loader w-5 h-5 mx-auto"></div>'; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API}/register`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
+                if(res.ok) {
+                    currentUser = data; 
+                    getEl('summaryName').innerText = data.fullName;
+                    getEl('summaryCourse').innerText = data.course;
+                    hide('step1-content'); show('step2-content'); 
+                    getEl('step1-dot').className = "w-3 h-3 rounded-full bg-gray-300";
+                    getEl('step2-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
+                } else {
+                    const err = await res.json();
+                    alert("Registration Failed: " + err.error);
+                }
+            } catch(e) { alert("Server Error"); }
+            finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        // --- 2. ADMISSION PAYMENT ---
+        async function processAdmissionPayment() {
+            show('paymentLoader');
+            await fetch(`${API}/update-application`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ applicationId: currentUser.applicationId, regFeeStatus: "Paid" }) 
+            });
+            setTimeout(() => {
+                hide('paymentLoader'); hide('step2-content'); show('step3-content');
+                getEl('credUsername').innerText = currentUser.mobile;
+                getEl('credPassword').innerText = currentUser.dob;
+                getEl('credAppId').innerText = currentUser.applicationId;
+                getEl('step2-dot').className = "w-3 h-3 rounded-full bg-gray-300";
+                getEl('step3-dot').className = "w-3 h-3 rounded-full bg-ppsuRed";
+            }, 2000);
+        }
+
+        // --- 3. LOGIN ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = getEl('loginBtn'); btn.innerHTML = '<div class="loader w-5 h-5 mx-auto"></div>';
+            const mobile = getEl('loginMobile').value;
+            const dob = getEl('loginPass').value;
+
+            try {
+                const res = await fetch(`${API}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({mobile, dob}) });
+                const data = await res.json();
+                if(res.ok) {
+                    currentUser = data.student;
+                    initDashboard(currentUser);
+                    hide('loginFlow'); show('dashboardFlow');
+                    getEl('publicHeader').classList.add('hidden');
+                } else {
+                    alert(data.error);
+                }
+            } catch(e) { alert("Login connection failed"); }
+            finally { btn.innerText = "Secure Login"; }
+        }
+
+        function initDashboard(user) {
+            // Sidebar
+            getEl('sidebarName').innerText = user.fullName;
+            getEl('sidebarAppId').innerText = user.applicationId;
+            getEl('sidebarInitials').innerText = user.fullName.charAt(0);
+            
+            // Home
+            getEl('dashNameHome').innerText = user.fullName.split(' ')[0];
+            getEl('dashCourseHome').innerText = user.course;
+            
+            // ID Card
+            getEl('idCardName').innerText = user.fullName;
+            getEl('idCardNo').innerText = "ID: " + user.applicationId;
+            getEl('idCardCourseDisplay').innerText = user.course;
+            getEl('idCardDob').innerText = user.dob;
+
+            // Pre-fill App Form
+            getEl('appFullName').value = user.fullName;
+            getEl('appMobile').value = user.mobile;
+            getEl('appAadhaar').value = user.aadhaar;
+            getEl('appCourse').value = user.course;
+            getEl('appEmail').value = user.email || "";
+            getEl('appAddress').value = user.address || "";
+            getEl('appCity').value = user.city || "";
+            getEl('appState').value = user.state || "";
+            getEl('appPincode').value = user.pincode || "";
+            
+            // Receipts
+            getEl('receiptDate1').innerText = user.date;
+
+            // Check App Fee
+            if(user.appFeeStatus === "Paid") {
+                getEl('submitAppBtn').innerText = "Details Saved & Fee Paid";
+                getEl('submitAppBtn').className = "px-8 py-3 bg-green-600 text-white font-bold rounded-lg cursor-not-allowed opacity-80";
+                getEl('submitAppBtn').disabled = true;
+                
+                getEl('dashAppStatus').innerText = "Submitted";
+                getEl('dashAppStatus').className = "text-xl font-bold text-green-600";
+                
+                show('appFeeReceiptRow');
+                getEl('receiptDate2').innerText = new Date().toLocaleDateString();
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        // --- 4. APP FEE LOGIC ---
+        async function handleApplicationSubmit(e) {
+            e.preventDefault();
+            const updateData = {
+                applicationId: currentUser.applicationId,
+                email: getEl('appEmail').value, address: getEl('appAddress').value,
+                city: getEl('appCity').value, state: getEl('appState').value, pincode: getEl('appPincode').value
             };
             
-            showToast('Welcome to PPSU! Registration Successful.', 'success');
-            saveState();
-            showDashboard();
+            const btn = getEl('submitAppBtn'); btn.innerText = "Saving...";
+            await fetch(`${API}/update-application`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(updateData) });
+            show('appPayModal');
+            btn.innerText = "Save & Pay App Fee (₹1,200)";
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const mobile = document.getElementById('loginMobile').value;
-            
-            // Simulating Login Check
-            if(state.user && state.user.mobile === mobile) {
-                showToast('Welcome back!', 'success');
-                showDashboard();
-            } else if (!state.user) {
-                showToast('No account found. Please Register first.', 'error');
-            } else {
-                 showToast('Invalid Mobile Number.', 'error');
-            }
-        }
-
-        function logout() {
-            // We keep the data in localStorage so they can log back in, 
-            // but we clear the session visually
-            document.getElementById('publicView').classList.remove('hidden');
-            document.getElementById('dashboardViews').classList.add('hidden');
-            document.getElementById('sidebar').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('flex'); // Fix tailwind class toggle
-            showToast('Logged out successfully.', 'success');
-        }
-
-        // ================= DASHBOARD UI LOGIC =================
-        function showDashboard() {
-            document.getElementById('publicView').classList.add('hidden');
-            document.getElementById('dashboardViews').classList.remove('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-            document.getElementById('sidebar').classList.add('flex');
-            
-            // Set User Data
-            document.getElementById('sideName').innerText = state.user.name;
-            document.getElementById('sideInitials').innerText = state.user.name.charAt(0);
-            document.getElementById('sideId').innerText = state.user.id;
-            
-            // Pre-fill App Form
-            document.getElementById('app_name').value = state.user.name;
-            document.getElementById('app_course').value = state.user.course;
-            document.getElementById('app_address').value = state.application.address;
-            document.getElementById('app_city').value = state.application.city;
-            document.getElementById('app_pincode').value = state.application.pincode;
-
-            nav('overview');
-            updateUI();
-        }
-
-        function nav(viewId) {
-            // Hide all views
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            // Show selected
-            document.getElementById('view-' + viewId).classList.remove('hidden');
-            // Update Title
-            document.getElementById('pageTitle').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
-            
-            // Sidebar Active State
-            document.querySelectorAll('aside nav button').forEach(btn => {
-                btn.classList.remove('bg-white/10', 'text-white');
-                btn.classList.add('hover:bg-white/5');
+        async function confirmAppPayment() {
+            hide('appPayModal');
+            await fetch(`${API}/update-application`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ applicationId: currentUser.applicationId, appFeeStatus: "Paid" }) 
             });
-            document.getElementById('btn-'+viewId).classList.add('bg-white/10', 'text-white');
-            
-            // Mobile: Close sidebar if open
-            const sidebar = document.getElementById('sidebar');
-            if(!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 768) {
-                toggleSidebar();
-            }
+            alert("Application Fee Paid Successfully!");
+            currentUser.appFeeStatus = "Paid";
+            initDashboard(currentUser); // Refresh
         }
 
-        function toggleSidebar() {
-            const sb = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sb.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
-
-        function updateUI() {
-            // 1. Progress Bar Logic
-            let progress = 0;
-            if(state.application.paid) progress += 40;
-            if(state.documents['10th']) progress += 20;
-            if(state.documents['12th']) progress += 20;
-            if(state.hostel.booked) progress += 20;
-
-            document.getElementById('progressPercent').innerText = progress + '%';
-            document.getElementById('progressBar').style.width = progress + '%';
-
-            // 2. Status Text
-            const statusText = document.getElementById('statusText');
-            const statusDot = document.getElementById('statusDot');
-            
-            if(state.application.paid) {
-                statusText.innerText = "Submitted";
-                statusText.classList.replace('text-slate-800', 'text-green-600');
-                statusDot.classList.replace('bg-yellow-400', 'bg-green-500');
-                document.getElementById('feeStatusText').innerText = "Paid";
-                document.getElementById('feeStatusText').className = "font-bold text-green-600";
-                
-                // Form View Update
-                document.getElementById('btnSaveApp').innerText = "Application Submitted";
-                document.getElementById('btnSaveApp').disabled = true;
-                document.getElementById('btnSaveApp').classList.replace('bg-slate-900', 'bg-green-600');
-                document.getElementById('appFormStatusBadge').innerText = "Submitted";
-                document.getElementById('appFormStatusBadge').className = "px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold";
-                document.getElementById('btnDownloadApp').classList.remove('hidden');
-            }
-
-            // 3. Documents (Previews)
-            ['10th','12th','aadhar'].forEach(key => {
-                if(state.documents[key]) {
-                    document.getElementById('prev_'+key).src = state.documents[key];
-                    document.getElementById('prev_'+key).classList.remove('hidden');
-                    document.getElementById('icon_'+key).classList.add('hidden');
-                }
-            });
-
-            // 4. Hostel
-            if(state.hostel.booked) {
-                document.getElementById('hostelStatusMsg').innerHTML = `<span class="text-green-600 font-bold">Booked: ${state.hostel.type}</span>`;
-            }
-
-            // 5. Fee Table
-            const tbody = document.getElementById('feeTableBody');
-            tbody.innerHTML = '';
-            
-            if(state.application.paid) {
-                addFeeRow(tbody, 'Application Fee', 'Paid', '1,200');
-            }
-            if(state.hostel.booked) {
-                addFeeRow(tbody, 'Hostel Fee', 'Paid', state.hostel.fee.toLocaleString());
-            }
-            if(!state.application.paid && !state.hostel.booked) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No transactions yet</td></tr>';
-            }
-        }
-
-        function addFeeRow(tbody, desc, status, amt) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="p-4">${desc}</td>
-                <td class="p-4 text-slate-500">${new Date().toLocaleDateString()}</td>
-                <td class="p-4 font-bold">₹${amt}</td>
-                <td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold">${status}</span></td>
-                <td class="p-4 text-right"><button onclick="downloadReceipt('${desc}', '${amt}')" class="text-brand text-xs font-bold hover:underline">Receipt</button></td>
-            `;
-            tbody.appendChild(tr);
-        }
-
-        // ================= FUNCTIONAL LOGIC =================
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            const elem = document.getElementById('greetUser');
-            if(elem) {
-                let msg = "Good Morning";
-                if(hour >= 12) msg = "Good Afternoon";
-                if(hour >= 17) msg = "Good Evening";
-                if(state.user) elem.innerText = `${msg}, ${state.user.name.split(' ')[0]}!`;
-            }
-        }
-
-        function saveApplication(e) {
-            e.preventDefault();
-            if(state.application.paid) return;
-
-            // Simulate Payment
-            const btn = document.getElementById('btnSaveApp');
-            const originalText = btn.innerText;
-            btn.innerText = "Processing Payment...";
-            
-            setTimeout(() => {
-                state.application.address = document.getElementById('app_address').value;
-                state.application.city = document.getElementById('app_city').value;
-                state.application.pincode = document.getElementById('app_pincode').value;
-                state.application.paid = true;
-                
-                showToast('Payment Successful! Application Submitted.', 'success');
-                saveState();
-            }, 1500);
-        }
-
-        // --- FILE UPLOAD (BASE64) ---
-        function handleFileUpload(key, input) {
-            if (input.files && input.files[0]) {
+        // --- 5. DOCUMENT UPLOAD ---
+        function previewFile(inputId, imgId) {
+            const file = getEl(inputId).files[0];
+            if(file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    // Save Base64 string to state
-                    state.documents[key] = e.target.result;
-                    saveState();
-                    showToast(`${key} document uploaded successfully!`, 'success');
+                    const img = getEl(imgId);
+                    img.src = e.target.result;
+                    img.style.display = "block";
+                    img.nextElementSibling.style.display = "none"; // Hide icon
                 }
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         }
 
-        // --- HOSTEL LOGIC ---
-        let selectedHostelFee = 0;
-        function updateHostelTotal(fee) {
-            selectedHostelFee = fee;
-            document.getElementById('hostelTotal').innerText = "₹" + fee.toLocaleString();
+        async function uploadCert(docType, btnId) {
+            if(!currentUser) return alert("Session expired. Please login again.");
+            const fileInput = getEl(btnId.replace('btn', 'file'));
+            
+            if(!fileInput.files[0]) return alert("Please select a file first.");
+
+            const btn = getEl(btnId); 
+            const originalText = btn.innerText;
+            btn.innerText = "Uploading..."; btn.disabled = true;
+
+            const fd = new FormData();
+            fd.append("file", fileInput.files[0]);
+            fd.append("studentName", currentUser.fullName);
+            fd.append("docType", docType);
+
+            try {
+                const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+                if(res.ok) { 
+                    alert(`${docType} uploaded successfully!`); 
+                    btn.innerText = "Done ✓"; 
+                    btn.className = "w-full py-2 bg-green-600 text-white rounded text-sm font-bold";
+                } else {
+                    alert("Upload Failed. Check connection.");
+                    btn.innerText = originalText; btn.disabled = false;
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("Network Error"); 
+                btn.innerText = originalText; btn.disabled = false;
+            }
         }
 
-        function payHostel() {
-            if(selectedHostelFee === 0) return showToast('Please select a room type.', 'error');
-            
-            const btn = event.target;
-            btn.innerText = "Processing...";
-            
-            setTimeout(() => {
-                const type = document.querySelector('input[name="hostel"]:checked').value === 'NONAC' ? 'Non-AC' : 'AC';
-                state.hostel.booked = true;
-                state.hostel.type = type;
-                state.hostel.fee = selectedHostelFee;
-                
-                saveState();
-                showToast('Hostel Booked Successfully!', 'success');
-                btn.innerText = "Book Now";
-                updateUI();
-            }, 1500);
+        // --- 6. HOSTEL ---
+        function selectHostel(type, fee) {
+            hostelBooking = { type, fee };
+            getEl('selectedHostelType').innerText = type;
+            getEl('selectedHostelFee').innerText = "₹" + fee.toLocaleString();
+            hide('hostelSelectionView'); show('hostelPaymentView');
         }
 
-        // --- PDF DOWNLOADS ---
+        function payHostelFee() {
+            // In real app, add backend update here
+            alert("Hostel Booking Confirmed!");
+            hide('hostelPaymentView');
+            getEl('dashHostelStatus').innerText = "Booked (" + hostelBooking.type + ")";
+            getEl('dashHostelStatus').className = "text-xl font-bold text-green-600";
+            
+            show('hostelFeeReceiptRow');
+            getEl('hostelReceiptAmt').innerText = "₹" + hostelBooking.fee.toLocaleString();
+            getEl('receiptDate3').innerText = new Date().toLocaleDateString();
+            
+            switchTab('home'); // Go back to dash
+        }
+
+        // --- 7. PDF GENERATION ---
         function downloadReceipt(title, amount) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFillColor(238, 63, 54);
-            doc.rect(0, 0, 210, 10, 'F');
-            doc.setFontSize(22); doc.text("PPSU PAYMENT RECEIPT", 105, 30, { align: 'center' });
+            const doc = new window.jspdf.jsPDF();
+            doc.setFillColor(211, 47, 47); doc.rect(0, 0, 210, 20, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(16); doc.text("P P SAVANI UNIVERSITY", 105, 13, { align: 'center' });
             
-            doc.setFontSize(12);
-            doc.text(`Student: ${state.user.name}`, 20, 50);
-            doc.text(`ID: ${state.user.id}`, 20, 60);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, 50);
+            doc.setTextColor(0, 0, 0); doc.setFontSize(14); doc.text("PAYMENT RECEIPT", 105, 40, { align: 'center' });
+            
+            doc.setFontSize(11);
+            doc.text(`Receipt No: PPSU-${Math.floor(Math.random()*100000)}`, 15, 60);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 15, 68);
+            
+            const data = [
+                ["Student Name", currentUser ? currentUser.fullName : "Student"],
+                ["Application ID", currentUser ? currentUser.applicationId : "--"],
+                ["Payment For", title],
+                ["Amount Paid", `INR ${amount}/-`],
+                ["Status", "SUCCESS"]
+            ];
             
             doc.autoTable({
-                startY: 70,
-                head: [['Description', 'Amount', 'Status']],
-                body: [[title, `INR ${amount}`, 'Success']],
+                startY: 80,
+                head: [['Description', 'Details']],
+                body: data,
+                theme: 'grid',
+                headStyles: { fillColor: [211, 47, 47] }
             });
             
-            doc.save(`${title}_Receipt.pdf`);
+            doc.save(`${title.replace(/\s/g, '_')}_Receipt.pdf`);
         }
 
-        function downloadApplicationPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Application Summary 2026", 20, 20);
-            doc.save("Application.pdf");
+        function downloadFeeStructure() {
+            const doc = new window.jspdf.jsPDF();
+            doc.text("PPSU Academic Fee Structure 2026-27", 14, 20);
+            doc.autoTable({ html: '#feeTable', startY: 30 });
+            doc.save('PPSU_Fee_Structure.pdf');
         }
-
-        // --- TOAST NOTIFICATION SYSTEM ---
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
-            
-            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-500 text-xl"></i>' : '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>';
-            
-            toast.innerHTML = `${icon} <span class="font-medium text-slate-700 text-sm">${message}</span>`;
-            
-            container.appendChild(toast);
-            
-            // Trigger animation
-            requestAnimationFrame(() => { toast.classList.add('show'); });
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Initialize App
-        window.addEventListener('load', init);
-
     </script>
 </body>
 </html>
