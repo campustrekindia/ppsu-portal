@@ -11,24 +11,28 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
+// 1. Your Google Sheet ID (from the URL of your sheet)
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
+// 2. Your Google Drive Folder ID (from the URL of your folder)
 const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
 // ---------------------
 
 app.use(cors());
 app.use(express.json());
 
+// Memory storage for file uploads (max 5MB)
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
 
 // --- UPDATED DATABASE SCHEMA ---
-// We kept all old fields and added the 5 new ones
+// This now matches your new Frontend inputs perfectly
 const StudentSchema = new mongoose.Schema({
     fullName: String, 
     aadhaar: String, 
@@ -38,7 +42,7 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    // NEW FIELDS
+    // NEW FIELDS ADDED
     email: String, 
     address: String, 
     city: String, 
@@ -47,7 +51,8 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// --- KEY FILE FINDER ---
+// --- SMART KEY FINDER ---
+// Fixes the "File Not Found" error on Render by looking in both possible locations
 let KEY_PATH = 'credentials.json';
 if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
     if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
@@ -60,20 +65,24 @@ const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
 });
 
-app.get('/', (req, res) => res.send('PPSU Backend Live!'));
+// --- ROUTES ---
 
-// --- REGISTRATION ROUTE ---
+app.get('/', (req, res) => res.send('PPSU Backend Live & Updated!'));
+
+// 1. REGISTRATION ROUTE
 app.post('/api/register', async (req, res) => {
     try {
+        // Save to MongoDB
         const newStudent = new Student(req.body);
         await newStudent.save();
 
+        // Save to Google Sheets
         const sheets = google.sheets({ version: 'v4', auth });
         
-        // We append all data including the new fields to Google Sheets
+        // We now append data to columns A through M (13 columns)
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:M', // Expanded range A to M
+            range: 'Sheet1!A:M', 
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[
@@ -85,7 +94,7 @@ app.post('/api/register', async (req, res) => {
                     req.body.referral,
                     req.body.applicationId, 
                     new Date().toLocaleDateString(),
-                    // NEW DATA COLUMNS
+                    // NEW FIELDS
                     req.body.email, 
                     req.body.address, 
                     req.body.city, 
@@ -102,7 +111,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// --- UPLOAD ROUTE ---
+// 2. UPLOAD ROUTE
 app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).send("No file uploaded.");
@@ -111,8 +120,11 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const bufferStream = new stream.PassThrough();
         bufferStream.end(req.file.buffer);
 
+        // Naming format: StudentName_DocType_Timestamp.jpg
+        const fileName = `${req.body.studentName}_${req.body.docType}_${Date.now()}.jpg`;
+
         const fileMetadata = {
-            name: `${req.body.studentName}_${req.body.docType}_${Date.now()}.jpg`,
+            name: fileName,
             parents: [DRIVE_FOLDER_ID]
         };
 
@@ -127,7 +139,12 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
             fields: 'id, webViewLink'
         });
 
-        res.status(200).json({ fileId: response.data.id, link: response.data.webViewLink });
+        res.status(200).json({ 
+            message: "Upload Successful", 
+            fileId: response.data.id, 
+            link: response.data.webViewLink 
+        });
+
     } catch (error) {
         console.error("Drive Upload Error:", error);
         res.status(500).send("Upload Failed");
