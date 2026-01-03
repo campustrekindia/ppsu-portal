@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const { google } = require('googleapis');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2; // Import Cloudinary
 const stream = require('stream');
 const path = require('path');
 const fs = require('fs');
@@ -11,10 +12,15 @@ const fs = require('fs');
 const app = express();
 
 // --- CONFIGURATION ---
-// 1. Google Sheet ID
+// 1. Google Sheet ID (For Data Logging)
 const SPREADSHEET_ID = '1pNw6pceOz22fbhPMSpomV99y41CgXEBafJ9foe24SC4'; 
-// 2. Google Drive Folder ID
-const DRIVE_FOLDER_ID = '1v_mY2lECJmtEoBRKCJFWD7qhxC-FO-0l'; 
+
+// 2. Cloudinary Configuration (For File Storage)
+cloudinary.config({ 
+  cloud_name: 'dvks6hfcb', 
+  api_key: '695563669199692', 
+  api_secret: 'IbMOW49KnpLoVWCepnaiQ77UUws' 
+});
 // ---------------------
 
 app.use(cors());
@@ -33,7 +39,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Database Schema
 const StudentSchema = new mongoose.Schema({
-    // Reg Data
+    // Registration Data
     fullName: String, 
     aadhaar: String, 
     dob: String, 
@@ -42,7 +48,7 @@ const StudentSchema = new mongoose.Schema({
     referral: String, 
     applicationId: String, 
     date: String,
-    // Fees
+    // Fee Status
     regFeeStatus: String, // ₹12,500
     appFeeStatus: String, // ₹1,200
     // App Data
@@ -51,26 +57,27 @@ const StudentSchema = new mongoose.Schema({
     city: String, 
     state: String, 
     pincode: String,
-    // Hostel & Extras
-    hostelRoom: String,     // e.g. "Block A - 101"
-    messFeeStatus: String,  // e.g. "Paid" or "Pending"
-    profilePhotoUrl: String 
+    // Extras
+    hostelRoom: String,
+    messFeeStatus: String,
+    profilePhotoUrl: String
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// Auth Setup
+// Auth Setup (Only needed for Google Sheets now)
 let KEY_PATH = 'credentials.json';
 if (!fs.existsSync(path.join(__dirname, 'credentials.json'))) {
     if (fs.existsSync(path.join(__dirname, '../credentials.json'))) {
         KEY_PATH = '../credentials.json';
     }
 }
+// We only need Spreadsheets scope now
 const auth = new google.auth.GoogleAuth({
     keyFile: KEY_PATH, 
-    scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
-app.get('/', (req, res) => res.send('PPSU ERP Backend Live!'));
+app.get('/', (req, res) => res.send('PPSU ERP Backend Live (Cloudinary)!'));
 
 // --- ROUTE 1: REGISTER ---
 app.post('/api/register', async (req, res) => {
@@ -87,7 +94,7 @@ app.post('/api/register', async (req, res) => {
         });
         await newStudent.save();
 
-        // Sheet Update (Columns A-O)
+        // Update Google Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -137,7 +144,7 @@ app.post('/api/update-application', async (req, res) => {
 
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
-        // Update Sheet Logic
+        // Update Sheet
         const sheets = google.sheets({ version: 'v4', auth });
         const idList = await sheets.spreadsheets.values.get({ spreadsheetId: SPREADSHEET_ID, range: 'Sheet1!G:G' });
         const rows = idList.data.values;
@@ -147,7 +154,6 @@ app.post('/api/update-application', async (req, res) => {
 
         if (rowIndex !== -1) {
             const sheetRow = rowIndex + 1;
-            
             if (updates.regFeeStatus) {
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: SPREADSHEET_ID, range: `Sheet1!I${sheetRow}`, 
@@ -171,36 +177,39 @@ app.post('/api/update-application', async (req, res) => {
     }
 });
 
-// --- ROUTE 4: UPLOAD ---
-app.post('/api/upload', upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).send("No file.");
-        
-        const safeName = req.body.studentName ? req.body.studentName.replace(/[^a-zA-Z0-9]/g, '_') : "Student";
-        const safeDoc = req.body.docType ? req.body.docType.replace(/[^a-zA-Z0-9]/g, '_') : "Doc";
+// --- ROUTE 4: UPLOAD (VIA CLOUDINARY) ---
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).send("No file uploaded.");
 
-        const drive = google.drive({ version: 'v3', auth });
-        const bufferStream = new stream.PassThrough();
-        bufferStream.end(req.file.buffer);
+    // Stream upload to Cloudinary
+    const uploadStream = cloudinary.uploader.upload_stream(
+        { 
+            folder: "PPSU_Documents", // Creates this folder in your Cloudinary automatically
+            resource_type: "auto"
+        },
+        async (error, result) => {
+            if (error) {
+                console.error("Cloudinary Error:", error);
+                return res.status(500).send("Upload Failed");
+            }
 
-        const response = await drive.files.create({
-            resource: { name: `${safeName}_${safeDoc}_${Date.now()}.jpg`, parents: [DRIVE_FOLDER_ID] },
-            media: { mimeType: req.file.mimetype, body: bufferStream },
-            fields: 'id, webViewLink'
-        });
+            // If Passport Photo, save URL to DB for ID Card
+            if(req.body.docType === 'Passport Photo') {
+                await Student.findOneAndUpdate(
+                    { fullName: req.body.studentName },
+                    { $set: { profilePhotoUrl: result.secure_url } }
+                );
+            }
 
-        if(req.body.docType === 'Passport Photo') {
-             await Student.findOneAndUpdate(
-                { fullName: req.body.studentName },
-                { $set: { profilePhotoUrl: response.data.webViewLink } }
-            );
+            res.status(200).json({ 
+                fileId: result.public_id, 
+                link: result.secure_url 
+            });
         }
+    );
 
-        res.status(200).json({ fileId: response.data.id, link: response.data.webViewLink });
-    } catch (error) {
-        console.error("Upload Error:", error);
-        res.status(500).send("Upload Failed: " + error.message);
-    }
+    // Pipe the buffer to Cloudinary
+    stream.Readable.from(req.file.buffer).pipe(uploadStream);
 });
 
 const PORT = process.env.PORT || 5000;
