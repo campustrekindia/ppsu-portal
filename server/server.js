@@ -168,16 +168,5 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     stream.Readable.from(req.file.buffer).pipe(uploadStream);
 });
 
-// --- ☢️ DANGER: RESET DATABASE ROUTE (Added for you) ☢️ ---
-app.get('/api/nuke-database', async (req, res) => {
-    try {
-        await Student.deleteMany({}); 
-        res.send("💥 Database Cleared! MongoDB is now empty.");
-    } catch (e) {
-        res.status(500).send("Error clearing DB: " + e.message);
-    }
-});
-// ------------------------------------------------------------
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
