@@ -30,7 +30,6 @@ const upload = multer({
 });
 
 // --- 3. DATABASE CONNECTION ---
-// If this fails, Registration fails. Ensure MONGO_URI is in Render Environment Variables.
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("DB Error:", err));
@@ -45,16 +44,13 @@ const StudentSchema = new mongoose.Schema({
 const Student = mongoose.model('Student', StudentSchema);
 
 // --- 4. SAFE GOOGLE AUTH ---
-// This allows the app to start even if Google Credentials are missing/broken
 let auth;
 try {
     const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-    // Check Render Env Var first
     if (process.env.GOOGLE_CREDENTIALS) {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
         auth = new google.auth.GoogleAuth({ credentials, scopes: SCOPES });
     } 
-    // Check Local File
     else if (fs.existsSync(path.join(__dirname, 'credentials.json'))) {
         auth = new google.auth.GoogleAuth({
             keyFile: path.join(__dirname, 'credentials.json'),
@@ -79,7 +75,6 @@ app.post('/api/register', async (req, res) => {
         });
         await newStudent.save();
 
-        // Update Sheet (Skip if auth failed)
         if (auth) {
             try {
                 const sheets = google.sheets({ version: 'v4', auth });
@@ -97,7 +92,6 @@ app.post('/api/register', async (req, res) => {
                 });
             } catch (sheetErr) { console.error("Sheet Error (Ignored):", sheetErr.message); }
         }
-
         res.status(201).json({ message: "Registered", id: newStudent.applicationId });
     } catch (error) {
         console.error("Reg Error:", error);
@@ -123,7 +117,6 @@ app.post('/api/update-application', async (req, res) => {
         const updatedStudent = await Student.findOneAndUpdate({ applicationId }, { $set: updates }, { new: true });
         if (!updatedStudent) return res.status(404).json({ error: "Student Not Found" });
 
-        // Best-effort Sheet Update
         if (auth) {
             try {
                 const sheets = google.sheets({ version: 'v4', auth });
@@ -154,7 +147,7 @@ app.post('/api/update-application', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Update Failed" }); }
 });
 
-// ROUTE 4: UPLOAD (Using Your Cloudinary Keys)
+// ROUTE 4: UPLOAD
 app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).send("No file.");
     
@@ -174,6 +167,17 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     );
     stream.Readable.from(req.file.buffer).pipe(uploadStream);
 });
+
+// --- ☢️ DANGER: RESET DATABASE ROUTE (Added for you) ☢️ ---
+app.get('/api/nuke-database', async (req, res) => {
+    try {
+        await Student.deleteMany({}); 
+        res.send("💥 Database Cleared! MongoDB is now empty.");
+    } catch (e) {
+        res.status(500).send("Error clearing DB: " + e.message);
+    }
+});
+// ------------------------------------------------------------
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
